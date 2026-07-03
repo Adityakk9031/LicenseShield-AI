@@ -14,25 +14,25 @@ export async function settleAuditOrder(
         const client = new AgentClient(config, process.env.CROO_SDK_KEY);
         
         const neg = await client.negotiateOrder({
-            service_id: process.env.CROO_TARGET_SERVICE_ID || 'mock_service_id',
+            serviceId: process.env.CROO_TARGET_SERVICE_ID || 'mock_service_id',
             requirements: 'schema',
             metadata: "{}",
-            requester_agent_id: 'mock_agent',
-            fund_amount: '1.00',
-            fund_token: 'USDC',
-            require_fund_transfer: false
+            requesterAgentId: 'mock_agent',
+            fundAmount: '1.00',
+            fundToken: 'USDC',
+
         });
         
-        const orderRes = await client.acceptNegotiation(neg.id);
-        await client.payOrder(orderRes.order_id);
-        await client.deliverOrder(orderRes.order_id, {
-            deliverable_type: DeliverableType.Schema,
-            deliverable_text: JSON.stringify(verdict)
+        const orderRes = await client.acceptNegotiation(neg.negotiationId);
+        await client.payOrder(orderRes.order.orderId);
+        await client.deliverOrder(orderRes.order.orderId, {
+            deliverableType: DeliverableType.Schema,
+            deliverableText: JSON.stringify(verdict)
         });
         
         return {
-            negotiationId: neg.id,
-            orderId: orderRes.order_id,
+            negotiationId: neg.negotiationId,
+            orderId: orderRes.order.orderId,
             status: 'completed',
             deliverableUrl: null,
             settledAt: new Date().toISOString()
