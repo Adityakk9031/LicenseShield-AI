@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const REPORTS = [
   {
@@ -85,6 +85,69 @@ function formatDate(iso: string) {
 export default function ReportsPage() {
   const [selected, setSelected] = useState<typeof REPORTS[0] | null>(REPORTS[0]);
   const [filter, setFilter] = useState('All');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // WebGL-style canvas background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    let raf: number;
+    let t = 0;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number }[] = [];
+    for (let i = 0; i < 80; i++) {
+      particles.push({ x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3, size: Math.random()*1.5+.5, alpha: Math.random()*.4+.1 });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      const grid = 80;
+      for (let x = 0; x < canvas.width; x += grid) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+      for (let y = 0; y < canvas.height; y += grid) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${p.alpha})`; ctx.fill();
+      });
+      const cx = canvas.width/2, cy = canvas.height/2;
+      const gv = ctx.createRadialGradient(cx,cy*.4,0,cx,cy*.4,400);
+      gv.addColorStop(0,'rgba(124,58,237,0.12)'); gv.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = gv; ctx.fillRect(0,0,canvas.width,canvas.height);
+      t++; raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, []);
+
+  // Scroll perspective
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (heroRef.current) {
+        const scale = Math.max(0.85, 1 - y * 0.0003);
+        const tz = Math.min(0, -y * 0.15);
+        const opacity = Math.max(0, 1 - y * 0.002);
+        heroRef.current.style.transform = `perspective(1200px) translateZ(${tz}px) scale(${scale})`;
+        heroRef.current.style.opacity = String(opacity);
+      }
+      document.querySelectorAll<HTMLElement>('.scroll-reveal').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.88) el.classList.add('revealed');
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const filtered = REPORTS.filter(r => filter === 'All' || r.status === filter);
 
@@ -94,8 +157,11 @@ export default function ReportsPage() {
   const totalHigh = REPORTS.reduce((a, r) => a + r.high, 0);
 
   return (
-    <div id="app-root">
-      <nav className="navbar">
+    <div style={{ background: '#000', minHeight: '100vh', overflowX: 'hidden' }}>
+      {/* Canvas BG */}
+      <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
+
+      <nav className="navbar" style={{ zIndex: 50 }}>
         <a href="/" className="navbar-logo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -113,45 +179,48 @@ export default function ReportsPage() {
         </div>
       </nav>
 
-      <div className="page-container" style={{ paddingTop: 100, paddingBottom: 80 }}>
-        {/* HEADER */}
-        <div style={{ marginBottom: 40 }}>
-          <div className="hero-eyebrow anim-fade-up">Audit History</div>
-          <h1 className="hero-title anim-fade-up anim-delay-1" style={{ fontSize: 'clamp(40px,6vw,80px)', marginBottom: 16 }}>
-            Reports<span style={{ color: '#262626' }}>.</span>
+      {/* HERO SECTION */}
+      <section style={{ position: 'relative', zIndex: 1, minHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 24px', paddingTop: 80 }}>
+        <div ref={heroRef} style={{ willChange: 'transform', transition: 'transform .05s linear' }}>
+          <div className="hero-eyebrow anim-fade-up" style={{ justifyContent: 'center', display: 'flex' }}>Audit History</div>
+          <h1 className="anim-fade-up anim-delay-1" style={{ fontSize: 'clamp(56px,9vw,120px)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-0.04em', marginBottom: 28 }}>
+            Audit<br />
+            <span style={{ WebkitTextStroke: '1px rgba(255,255,255,0.15)', color: 'transparent' }}>Reports</span><span style={{ background: 'linear-gradient(135deg,#7c3aed,#10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>.</span>
           </h1>
         </div>
+      </section>
 
+      <div className="page-container" style={{ position: 'relative', zIndex: 1, paddingTop: 0, paddingBottom: 100 }}>
         {/* SUMMARY STATS */}
-        <div className="stats-bar anim-fade-up anim-delay-2" style={{ marginBottom: 32 }}>
-          <div className="stat-item">
+        <div className="stats-bar scroll-reveal" style={{ marginBottom: 40, perspective: 1000 }}>
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value">{REPORTS.length}</div>
             <div className="stat-label">Total audits</div>
           </div>
-          <div className="stat-item">
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value" style={{ color: '#22c55e' }}>{REPORTS.length - totalFlagged}</div>
             <div className="stat-label">Clean</div>
           </div>
-          <div className="stat-item">
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value" style={{ color: '#ef4444' }}>{totalFlagged}</div>
             <div className="stat-label">Flagged</div>
           </div>
-          <div className="stat-item">
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value">{totalScanned}</div>
             <div className="stat-label">Packages scanned</div>
           </div>
-          <div className="stat-item">
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value" style={{ color: '#ef4444' }}>{totalHigh}</div>
             <div className="stat-label">High severity</div>
           </div>
-          <div className="stat-item">
+          <div className="stat-item" style={{ transform: 'perspective(600px) rotateX(6deg)' }}>
             <div className="stat-value">{totalRisks}</div>
             <div className="stat-label">Total risks found</div>
           </div>
         </div>
 
         {/* CONTROLS */}
-        <div className="anim-fade-up anim-delay-3" style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        <div className="scroll-reveal" style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
           {['All', 'APPROVED', 'FLAGGED'].map(f => (
             <button
               key={f}
@@ -173,19 +242,21 @@ export default function ReportsPage() {
         {/* MAIN LAYOUT */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {/* REPORTS LIST */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, perspective: 1000 }}>
             {filtered.map((rpt, i) => (
               <div
                 key={rpt.id}
-                className="glass-card anim-fade-up"
+                className="glass-card scroll-reveal"
                 onClick={() => setSelected(rpt)}
                 style={{
-                  animationDelay: `${i * 0.07}s`,
                   cursor: 'pointer',
                   padding: 24,
                   borderColor: selected?.id === rpt.id ? 'rgba(255,255,255,0.25)' : undefined,
-                  transition: 'all 0.2s',
+                  transform: 'perspective(600px) rotateX(6deg)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'perspective(600px) rotateX(0deg) translateY(-4px)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'perspective(600px) rotateX(6deg)')}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: '#525252' }}>{rpt.id}</div>
@@ -216,8 +287,7 @@ export default function ReportsPage() {
 
           {/* DETAIL VIEW */}
           {selected && (
-            <div className="glass-card anim-fade-up" style={{ position: 'sticky', top: 88, height: 'fit-content', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
-              {/* Detail Header */}
+            <div className="glass-card scroll-reveal revealed" style={{ position: 'sticky', top: 88, height: 'fit-content', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
                   <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: '#525252', marginBottom: 8 }}>{selected.id}</div>
@@ -235,7 +305,6 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Meta Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
                 {[
                   { label: 'Date', value: formatDate(selected.timestamp) },
@@ -254,7 +323,6 @@ export default function ReportsPage() {
                 ))}
               </div>
 
-              {/* Packages */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#525252', marginBottom: 12 }}>Packages Scanned ({selected.packages.length})</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -269,7 +337,6 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Risk bar */}
               {selected.risks > 0 && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#525252', marginBottom: 12 }}>Risk Breakdown</div>

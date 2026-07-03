@@ -650,3 +650,24 @@ body::before {
   font-size: 13px;
   letter-spacing: -0.01em;
 }
+
+/* ============================
+   3D SCROLL REVEAL
+   ============================ */
+
+.scroll-reveal {
+  opacity: 0;
+  transform: perspective(800px) rotateX(12deg) translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: perspective(800px) rotateX(0deg) translateY(0);
+}
+
+/* Stagger children inside a revealed container */
+.scroll-reveal.revealed > * {
+  animation: none;
+}
+
