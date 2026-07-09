@@ -21,6 +21,7 @@ export interface AuditVerdict {
   risks: RiskItem[];
   suggestions: string[];
   capTransaction: CAPTransaction | null;
+  aiAnalysis?: string;
 }
 
 export interface CAPTransaction {

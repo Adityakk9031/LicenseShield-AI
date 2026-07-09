@@ -4,6 +4,7 @@ import { fetchNpmLicenseAndVersion } from '@/lib/npm-fetcher';
 import { queryOSVBatch } from '@/lib/osv-client';
 import { checkLicenseCompatibility } from '@/lib/license-engine';
 import { settleAuditOrder } from '@/lib/croo-cap';
+import { runAIAudit } from '@/lib/gemini';
 
 export async function POST(req: Request) {
   try {
@@ -33,43 +34,63 @@ export async function POST(req: Request) {
     // 2. Query OSV for Vulnerabilities in batch
     const osvResults = await queryOSVBatch(resolvedPackages);
 
-    // 3. Process each package
-    resolvedPackages.forEach(pkg => {
-      // License Check
-      const licenseConflict = checkLicenseCompatibility(pkg.name, pkg.license, projectLicense);
-      if (licenseConflict) {
-        risks.push(licenseConflict);
-        if (licenseConflict.severity === 'HIGH') {
+    // 3. Prepare package list for AI audit
+    const packagesForAi = resolvedPackages.map(pkg => ({
+      name: pkg.name,
+      version: pkg.version,
+      license: pkg.license,
+      vulnerabilities: osvResults.get(pkg.name) || []
+    }));
+
+    // 4. Run AI audit with Gemini 2.5 Flash
+    const aiVerdict = await runAIAudit(projectLicense, packagesForAi);
+
+    let verdict: Omit<AuditVerdict, 'capTransaction'>;
+
+    if (aiVerdict) {
+      verdict = {
+        status: aiVerdict.status,
+        risks: aiVerdict.risks,
+        suggestions: aiVerdict.suggestions,
+        aiAnalysis: aiVerdict.aiAnalysis
+      };
+    } else {
+      // Fallback: rule-based compliance check
+      resolvedPackages.forEach(pkg => {
+        // License Check
+        const licenseConflict = checkLicenseCompatibility(pkg.name, pkg.license, projectLicense);
+        if (licenseConflict) {
+          risks.push(licenseConflict);
+          if (licenseConflict.severity === 'HIGH') {
             suggestions.push(`Replace ${pkg.name} with a ${projectLicense}-compatible alternative (current: ${pkg.license})`);
-        } else {
+          } else {
             suggestions.push(`Review license terms for ${pkg.name} (${pkg.license}) for potential conflicts`);
+          }
         }
-      }
 
-      // Vulnerability Check
-      const vulns = osvResults.get(pkg.name) || [];
-      if (vulns.length > 0) {
-        // Simplify severity extraction, OSV might not always provide CVSS in severity array easily
-        // We will mark all found vulnerabilities as HIGH for demonstration
-        risks.push({
-          package: pkg.name,
-          type: 'VULNERABILITY',
-          severity: 'HIGH',
-          detail: `Found ${vulns.length} vulnerabilities (e.g. ${vulns[0].id})`
-        });
-        suggestions.push(`Upgrade or replace ${pkg.name} due to known vulnerabilities`);
-      }
-    });
+        // Vulnerability Check
+        const vulns = osvResults.get(pkg.name) || [];
+        if (vulns.length > 0) {
+          risks.push({
+            package: pkg.name,
+            type: 'VULNERABILITY',
+            severity: 'HIGH',
+            detail: `Found ${vulns.length} vulnerabilities (e.g. ${vulns[0].id})`
+          });
+          suggestions.push(`Upgrade or replace ${pkg.name} due to known vulnerabilities`);
+        }
+      });
 
-    const status = risks.some(r => r.severity === 'HIGH') ? 'FLAGGED' : 'APPROVED';
-    
-    const verdict: Omit<AuditVerdict, 'capTransaction'> = {
-      status,
-      risks,
-      suggestions: Array.from(new Set(suggestions)), // deduplicate
-    };
+      const status = risks.some(r => r.severity === 'HIGH') ? 'FLAGGED' : 'APPROVED';
+      
+      verdict = {
+        status,
+        risks,
+        suggestions: Array.from(new Set(suggestions)), // deduplicate
+      };
+    }
 
-    // 4. Settle via CROO CAP
+    // 5. Settle via CROO CAP
     const capTx = await settleAuditOrder(verdict);
 
     const fullVerdict: AuditVerdict = {

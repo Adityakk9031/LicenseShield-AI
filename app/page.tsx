@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 interface Risk { package: string; type: string; severity: string; detail: string; }
-interface AuditVerdict { status: 'APPROVED'|'FLAGGED'; risks: Risk[]; suggestions: string[]; capTransaction?: { orderId: string }; }
+interface AuditVerdict { status: 'APPROVED'|'FLAGGED'; risks: Risk[]; suggestions: string[]; capTransaction?: { orderId: string }; aiAnalysis?: string; }
 
 export default function Home() {
   const [input, setInput] = useState('colors@1.4.1\nlodash@4.17.20\nreact@18.2.0');
@@ -223,6 +223,40 @@ export default function Home() {
                   <div className={`verdict-title ${verdict.status==='APPROVED'?'approved':'flagged'}`}>{verdict.status==='APPROVED'?'Clean.':'Flagged.'}</div>
                   <div className="verdict-subtitle">{verdict.risks.length===0?'No issues detected.': `${verdict.risks.length} risk${verdict.risks.length>1?'s':''} detected`}</div>
                 </div>
+
+                {verdict.aiAnalysis && (
+                  <div style={{
+                    background: 'linear-gradient(to right, rgba(124, 58, 237, 0.08), rgba(16, 185, 129, 0.04))',
+                    border: '1px solid rgba(124, 78, 237, 0.15)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    marginBottom: 24,
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: '#d4d4d4',
+                    textAlign: 'left'
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      background: 'linear-gradient(135deg, #a78bfa, #34d399)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      marginBottom: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a78bfa' }}>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                      </svg>
+                      Gemini 2.5 Flash Expert Analysis
+                    </div>
+                    {verdict.aiAnalysis}
+                  </div>
+                )}
                 {verdict.capTransaction?.orderId && <div className="tx-chip"><span>CROO TX</span>{verdict.capTransaction.orderId}</div>}
                 {verdict.risks.length>0 && (
                   <><div className="risk-list-header">{verdict.risks.length} Risk{verdict.risks.length>1?'s':''} Found</div>
