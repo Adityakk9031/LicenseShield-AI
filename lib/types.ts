@@ -20,14 +20,15 @@ export interface AuditVerdict {
   status: 'APPROVED' | 'FLAGGED';
   risks: RiskItem[];
   suggestions: string[];
-  capTransaction: CAPTransaction | null;
+  settlementTxHash?: string | null;
+  authModel?: 'ModelA_SaaS' | 'ModelB_Web3' | null;
   aiAnalysis?: string;
 }
 
-export interface CAPTransaction {
-  negotiationId: string;
-  orderId: string;
+export interface Web3EscrowTransaction {
+  auditId: string;
+  txHash: string;
   status: 'completed' | string;
-  deliverableUrl: string | null;
   settledAt: string;
 }
+

@@ -1,9 +1,10 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import CursorFX from '@/components/CursorFX'
 
 export const metadata: Metadata = {
   title: 'LicenseShield AI — Dependency Security Audit',
-  description: 'AI-powered license and vulnerability auditing for your dependencies via the CROO Network.',
+  description: 'AI-powered license and vulnerability auditing for your dependencies settled on Base Sepolia.',
 }
 
 export default function RootLayout({
@@ -17,7 +18,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body>
+        <CursorFX />
+        {children}
+      </body>
     </html>
   )
 }

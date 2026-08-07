@@ -54,8 +54,9 @@ export default function AuditForm({ onAudit, loading }: { onAudit: (packages: Pa
           />
         </div>
         <button type="submit" disabled={loading}>
-          {loading ? 'Auditing...' : 'Run Audit via CROO'}
+          {loading ? 'Auditing...' : 'Run Security & License Audit'}
         </button>
+
       </form>
     </div>
   );

@@ -9,15 +9,14 @@ export default function VerdictCard({ verdict }: { verdict: AuditVerdict }) {
         {isApproved ? 'APPROVED ✓' : 'FLAGGED ⚠'}
       </h2>
       
-      {verdict.capTransaction && (
+      {verdict.settlementTxHash && (
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem' }}>
-          <div style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>CROO CAP Settlement</div>
-          <div><strong>Order ID:</strong> {verdict.capTransaction.orderId}</div>
-          <div><strong>Negotiation ID:</strong> {verdict.capTransaction.negotiationId}</div>
-          <div><strong>Status:</strong> <span style={{ color: 'var(--accent)' }}>{verdict.capTransaction.status}</span></div>
-          <div><strong>Settled At:</strong> {new Date(verdict.capTransaction.settledAt).toLocaleString()}</div>
+          <div style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Base Sepolia On-Chain Settlement</div>
+          <div><strong>TX Hash:</strong> <span style={{ fontFamily: 'monospace' }}>{verdict.settlementTxHash}</span></div>
+          <div><strong>Status:</strong> <span style={{ color: 'var(--success)' }}>COMPLETED</span></div>
         </div>
       )}
+
 
       {verdict.suggestions.length > 0 && (
         <div style={{ marginTop: '1.5rem', textAlign: 'left' }}>

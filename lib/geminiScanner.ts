@@ -21,7 +21,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 
 /**
  * Canonical scanner output — identical schema for both sub-functions.
- * This is what the checklist requires and what CROO deliverables carry.
+ * This is what the checklist requires and what LicenseShield deliverables carry.
  */
 export interface ScannerVerdict {
   status: 'APPROVED' | 'FLAGGED';
