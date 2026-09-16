@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase-client';
+import { useUser, useClerk } from '@clerk/nextjs';
+import BrandLogo from '@/components/ui/BrandLogo';
 
 /* ─────────────────────────────────────────────
    Nav item definitions
@@ -35,47 +36,16 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router   = useRouter();
-  const supabase = createClient();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
 
-  const [userEmail,  setUserEmail]  = useState<string>('dev@licenseshield.ai');
   const [signingOut, setSigningOut] = useState(false);
-  const [mounted,    setMounted]    = useState(false);
-
-  /* ── Fetch real session ── */
-  const checkAuth = async () => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-      }
-    } catch {
-      /* fallback stays as 'dev@licenseshield.ai' */
-    }
-  };
-
-  useEffect(() => {
-    setMounted(true);
-    checkAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ── Sign-out handler ── */
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
-      await supabase.auth.signOut();
+      await signOut();
       router.push('/');
     } catch {
       setSigningOut(false);
@@ -83,11 +53,12 @@ export default function DashboardLayout({
   };
 
   /* ── Derived display values ── */
+  const userEmail = user?.primaryEmailAddress?.emailAddress ?? 'dev@licenseshield.ai';
   const avatarChars = userEmail.slice(0, 2).toUpperCase();
   const pageLabel   = getPageLabel(pathname);
 
   /* Prevent hydration mismatch */
-  if (!mounted) return null;
+  if (!isLoaded) return null;
 
   return (
     <div className="dash-layout">
@@ -98,12 +69,10 @@ export default function DashboardLayout({
       <aside className="dash-sidebar">
 
         {/* ── Logo ── */}
-        <div className="dash-sidebar-logo">
-          <div className="dash-sidebar-logo-icon">🛡️</div>
-          <div className="dash-sidebar-logo-text">
-            <span className="dash-sidebar-brand">LicenseShield</span>
-            <span className="dash-sidebar-sub">AI Platform</span>
-          </div>
+        <div style={{ padding: '8px 4px 20px' }}>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <BrandLogo size="md" />
+          </Link>
         </div>
 
         {/* ── Navigation ── */}

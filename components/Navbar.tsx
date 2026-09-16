@@ -1,65 +1,130 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
+import BrandLogo from './ui/BrandLogo';
 
-export default function Navbar() {
-  const pathname = usePathname();
+interface NavbarProps {
+  onOpenAuth?: (tab?: 'signin' | 'signup' | 'apikey' | 'web3') => void;
+}
+
+export default function Navbar({ onOpenAuth }: NavbarProps) {
+  const { isSignedIn, isLoaded } = useUser();
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <header className="navbar">
-      <div className="navbar-left">
-        <Link href="/" className="navbar-logo">
-          <div className="navbar-logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="M12 8v4"/>
-              <path d="M12 16h.01"/>
-            </svg>
-          </div>
-          <div className="navbar-brand-text">
-            <span className="brand-name">LicenseShield</span>
-            <span className="brand-badge">AI</span>
-          </div>
+    <header className="nav-header">
+      {/* Brand Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <BrandLogo size="md" />
         </Link>
 
-        <nav className="navbar-nav">
-          <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>
-            Audit Engine
-          </Link>
-          <Link href="/vault" className={`nav-link ${pathname === '/vault' ? 'active' : ''}`}>
-            License Vault
-          </Link>
-          <Link href="/reports" className={`nav-link ${pathname === '/reports' ? 'active' : ''}`}>
-            Reports
-          </Link>
+        {/* Nav Links */}
+        <nav className="nav-links-row">
+          <button onClick={() => scrollTo('agent-sandbox')} className="nav-link-btn" type="button">
+            Agent Sandbox
+          </button>
+          <button onClick={() => scrollTo('metrics')} className="nav-link-btn" type="button">
+            Telemetry
+          </button>
+          <button onClick={() => scrollTo('console-drawer')} className="nav-link-btn" type="button">
+            Audit Inspector
+          </button>
+          <button onClick={() => scrollTo('pricing')} className="nav-link-btn" type="button">
+            Pricing
+          </button>
+          <a
+            href="https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+            target="_blank"
+            rel="noreferrer"
+            className="nav-badge-contract"
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--emerald)', display: 'inline-block', boxShadow: '0 0 6px var(--emerald)' }} />
+            <span>Base Sepolia Escrow ↗</span>
+          </a>
         </nav>
       </div>
 
-      <div className="navbar-actions">
-        <div className="net-status-badge">
-          <span className="status-dot"></span>
-          <span className="net-text">Base Sepolia</span>
-        </div>
+      {/* Action Buttons & Auth State */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 
-        <div className="auth-model-pill">
-          <span className="pill-dot"></span>
-          <span className="pill-text">USDC Escrow / API Key</span>
-        </div>
+        {/* Signed In: Show Dashboard link + Avatar */}
+        {isLoaded && isSignedIn && (
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <Link
+              href="/dashboard"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--emerald)',
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                padding: '6px 14px',
+                borderRadius: 20,
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--emerald)' }} />
+              <span>Dashboard</span>
+            </Link>
+            <UserButton appearance={{ elements: { userButtonAvatarBox: { width: 32, height: 32 } } }} />
+          </div>
+        )}
 
-        <a 
-          href="https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e" 
-          target="_blank" 
-          rel="noreferrer"
-          className="btn-contract-link"
+        {/* Signed Out: Show Sign In + Sign Up */}
+        {isLoaded && !isSignedIn && (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <SignInButton mode="modal">
+              <button
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: 10,
+                  padding: '8px 16px',
+                  color: 'var(--text-muted)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: 'var(--font-sans)',
+                }}
+                type="button"
+              >
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                className="btn-primary-glow"
+                style={{ padding: '8px 16px', fontSize: 13 }}
+                type="button"
+              >
+                Start Free →
+              </button>
+            </SignUpButton>
+          </div>
+        )}
+
+        {/* CTA Button */}
+        <button
+          onClick={() => scrollTo('agent-sandbox')}
+          className="nav-cta-btn"
+          type="button"
         >
-          <span>Contract</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
+          <span>⚡ Test Guardrails</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="9 18 15 12 9 6" />
           </svg>
-        </a>
+        </button>
       </div>
     </header>
   );

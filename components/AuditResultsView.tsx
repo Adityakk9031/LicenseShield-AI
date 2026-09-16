@@ -11,10 +11,20 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
   const isApproved = report.status === 'APPROVED';
 
   return (
-    <section className="report-section">
-      <div className="report-container">
+    <section style={{ minHeight: '100vh', background: 'var(--cosmic-deep)', position: 'relative' }}>
+      {/* Gradient overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, height: 300,
+          background: 'linear-gradient(180deg, rgba(94,106,210,0.1) 0%, transparent 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ maxWidth: 1000, width: '100%', margin: '0 auto', padding: '80px 40px', position: 'relative' }}>
+
         {/* Header Action Bar */}
-        <div className="report-nav-bar">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 44 }}>
           <button type="button" onClick={onReset} className="btn-back">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="19" y1="12" x2="5" y2="12" />
@@ -23,21 +33,26 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
             <span>Run Another Audit</span>
           </button>
 
-          <div className="billed-pill">
-            <span>Billed via: {report.billedVia}</span>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+            {report.billedVia}
           </div>
         </div>
 
-        {/* Banner Card */}
+        {/* Section label */}
+        <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 16, fontFamily: 'var(--font-mono)' }}>
+          Section VIII · Audit Logs
+        </div>
+
+        {/* Verdict Banner */}
         <div className={`verdict-banner ${isApproved ? 'approved' : 'flagged'}`}>
-          <div className="verdict-icon-wrap">
+          <div>
             {isApproved ? (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ADE9A" strokeWidth="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             ) : (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -45,8 +60,8 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
             )}
           </div>
 
-          <div className="verdict-details">
-            <div className="verdict-status-badge">
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, color: isApproved ? '#4ADE9A' : '#FF6B6B', fontFamily: 'var(--font-mono)' }}>
               {isApproved ? 'APPROVED — PASSED COMPLIANCE' : 'FLAGGED — RISKS DETECTED'}
             </div>
             <h2 className="verdict-title">
@@ -60,39 +75,39 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
 
         {/* Stats Grid */}
         <div className="stats-grid">
-          <div className="stat-card glass-card">
+          <div className="stat-card">
             <span className="stat-value">{report.packagesScanned}</span>
             <span className="stat-label">Packages Scanned</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card">
             <span className={`stat-value ${report.flaggedCount > 0 ? 'text-rose' : 'text-emerald'}`}>
               {report.flaggedCount}
             </span>
             <span className="stat-label">Flagged Dependencies</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card">
             <span className={`stat-value ${report.vulnerabilityCount > 0 ? 'text-rose' : 'text-emerald'}`}>
               {report.vulnerabilityCount}
             </span>
-            <span className="stat-label">Known Vulnerabilities (CVEs)</span>
+            <span className="stat-label">Known CVEs</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card">
             <span className="stat-value text-indigo">{report.targetLicense}</span>
-            <span className="stat-label">Project Target License</span>
+            <span className="stat-label">Target License</span>
           </div>
         </div>
 
         {/* Packages Breakdown Matrix */}
-        <div className="breakdown-card glass-card">
+        <div className="breakdown-card">
           <h3 className="card-section-title">Dependency Compliance Matrix</h3>
-          <div className="table-wrapper">
+          <div style={{ overflowX: 'auto' }}>
             <table className="compliance-table">
               <thead>
                 <tr>
                   <th>Package Name</th>
                   <th>Version</th>
-                  <th>Declared License</th>
-                  <th>Vulnerabilities</th>
+                  <th>License</th>
+                  <th>CVEs</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -102,25 +117,39 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
                   const isPkgApproved = pkgStatus === 'APPROVED';
 
                   return (
-                    <tr key={idx} className={isPkgApproved ? 'row-approved' : 'row-flagged'}>
-                      <td className="pkg-name-cell">
-                        <code>{pkg.name}</code>
-                      </td>
-                      <td>{pkg.version || 'latest'}</td>
+                    <tr key={idx}>
                       <td>
-                        <span className="license-tag">{pkg.license || 'UNKNOWN'}</span>
+                        <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.9)' }}>
+                          {pkg.name}
+                        </code>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                        {pkg.version || 'latest'}
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 4,
+                            fontSize: 11,
+                            fontFamily: 'var(--font-mono)',
+                            color: 'rgba(255,255,255,0.7)',
+                          }}
+                        >
+                          {pkg.license || 'UNKNOWN'}
+                        </span>
                       </td>
                       <td>
                         {pkg.vulnerabilities && pkg.vulnerabilities.length > 0 ? (
-                          <span className="cve-count-badge">
-                            {pkg.vulnerabilities.length} OSV CVE(s)
-                          </span>
+                          <span className="badge incompatible">{pkg.vulnerabilities.length} CVE</span>
                         ) : (
-                          <span className="clean-badge">Clean</span>
+                          <span className="badge compatible">Clean</span>
                         )}
                       </td>
                       <td>
-                        <span className={`status-pill ${isPkgApproved ? 'pill-green' : 'pill-red'}`}>
+                        <span className={`badge ${isPkgApproved ? 'compatible' : 'incompatible'}`}>
                           {pkgStatus}
                         </span>
                       </td>
@@ -132,16 +161,27 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
           </div>
         </div>
 
-        {/* Suggested Alternatives if Flagged */}
+        {/* Suggested Alternatives */}
         {report.suggestedAlternatives && report.suggestedAlternatives.length > 0 && (
-          <div className="alternatives-card glass-card">
+          <div className="breakdown-card">
             <h3 className="card-section-title">Recommended Safe Alternatives</h3>
-            <p className="card-section-desc">
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 20, lineHeight: 1.6 }}>
               Consider replacing high-risk or incompatible dependencies with these clean alternatives:
             </p>
-            <div className="alternatives-tags">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {report.suggestedAlternatives.map((alt, idx) => (
-                <span key={idx} className="alt-tag">
+                <span
+                  key={idx}
+                  style={{
+                    padding: '6px 14px',
+                    background: 'rgba(94,106,210,0.12)',
+                    border: '1px solid rgba(94,106,210,0.25)',
+                    borderRadius: 20,
+                    fontSize: 13,
+                    color: '#7C83E8',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
                   ✨ {alt}
                 </span>
               ))}
@@ -151,19 +191,44 @@ export default function AuditResultsView({ report, onReset }: AuditResultsViewPr
 
         {/* Settlement Transaction Info */}
         {report.settlementTxHash && (
-          <div className="settlement-card glass-card">
-            <div className="settlement-left">
-              <span className="settlement-icon">⛓️</span>
+          <div
+            style={{
+              padding: '20px 24px',
+              background: 'rgba(201,168,76,0.06)',
+              border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 20,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 24 }}>⛓️</span>
               <div>
-                <div className="settlement-title">On-Chain Base Sepolia Settlement</div>
-                <div className="settlement-hash">Tx: {report.settlementTxHash}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(232,201,122,0.9)', marginBottom: 4 }}>
+                  On-Chain Base Sepolia Settlement
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                  Tx: {report.settlementTxHash}
+                </div>
               </div>
             </div>
             <a
               href={`https://sepolia.basescan.org/tx/${report.settlementTxHash}`}
               target="_blank"
               rel="noreferrer"
-              className="btn-tx-link"
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(201,168,76,0.12)',
+                border: '1px solid rgba(201,168,76,0.3)',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'rgba(232,201,122,0.8)',
+                cursor: 'pointer',
+              }}
             >
               View on Basescan ↗
             </a>
