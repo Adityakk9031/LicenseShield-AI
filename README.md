@@ -1,256 +1,232 @@
 # LicenseShield AI 🛡️
 
-> **CROO Agent Hackathon Submission** — Data & Verification / Dev Tooling Track
+> **Autonomous Open-Source Security & License Intelligence Engine for AI Coding Agents and Engineering Teams**
 
-An autonomous AI agent that audits npm dependency trees for license conflicts and known CVEs, powered by **Gemini 2.5 Flash** and settled on-chain via the **CROO Agent Protocol (CAP)** on Base Sepolia Testnet.
+LicenseShield AI is an autonomous hybrid security and license intelligence audit engine that protects modern software repositories from unauthorized AI code generation dependencies, copyleft license conflicts, and supply chain CVE vulnerabilities. Powered by **Google Gemini 2.5 Flash** via `@google/genai` and settled on **Base Sepolia** via a dedicated Smart Contract Escrow for Web3 micro-transactions.
 
 ---
 
-## 📐 Architecture
+## 📐 Platform Architecture
 
 ```
-                        ┌─────────────────────────────────────────────┐
-                        │           LicenseShield AI System            │
-                        │                                              │
-  Buyer Agent ─────────►│  Next.js API /api/audit                     │
-  (npm script /         │         │                                    │
-   CROO WebSocket)      │         ▼                                    │
-                        │  ┌─────────────────────┐                    │
-                        │  │   Audit Pipeline     │                    │
-                        │  │                      │                    │
-                        │  │ 1. NPM Registry API  │ ← license tags     │
-                        │  │ 2. OSV.dev Batch API │ ← CVE data         │
-                        │  │ 3. Gemini 2.5 Flash  │ ← AI analysis      │
-                        │  │    (geminiScanner)   │   per-package      │
-                        │  │ 4. runAIAudit()      │ ← holistic verdict │
-                        │  └─────────────────────┘                    │
-                        │         │                                    │
-                        │         ▼                                    │
-                        │  agentClient.deliverOrder()                  │
-                        │         │                                    │
-                        └─────────┼────────────────────────────────────┘
-                                  │
-                                  ▼
-                        Base Sepolia Testnet (CROO CAP)
-                        ← No custom Solidity contracts →
-                          Built-in AA wallet escrow
+                             ┌──────────────────────────────────────────────┐
+                             │       LicenseShield AI Platform Engine       │
+                             └──────────────────────┬───────────────────────┘
+                                                    │
+                 ┌──────────────────────────────────┴───────────────────────────────────┐
+                 ▼                                                                      ▼
+       Model A: Web2 SaaS (Human)                                            Model B: Web3 M2M (AI Agents)
+    Clerk Auth + Stripe Subscription                                      Bearer Keys / Base Sepolia Escrow
+                 │                                                                      │
+                 └──────────────────────────────────┬───────────────────────────────────┘
+                                                    │
+                                                    ▼
+                                    ┌───────────────────────────────┐
+                                    │   API Layer (/api/v1/audit)   │
+                                    └───────────────┬───────────────┘
+                                                    │
+                                    ┌───────────────┴───────────────┐
+                                    ▼                               ▼
+                      Concurrent Metadata & Security     Gemini 2.5 Flash Engine
+                      • NPM Registry API                 • Strict JSON Output Schema
+                      • OSV.dev CVE Ingestion            • Semantic License Analysis
+                                    │                               │
+                                    └───────────────┬───────────────┘
+                                                    ▼
+                                     Prisma ORM & Supabase Postgres
+                                                    │
+                                    ┌───────────────┴───────────────┐
+                                    ▼                               ▼
+                             [Web2 Response]              [Web3 On-Chain Settle]
+                             HTTP 200 OK + Audit JSON     settleAudit(auditId) on Base
 ```
+
+---
+
+## ⚡ Core Features
+
+- **Dual-Flow Business Model**:
+  - **Model A (Web2 SaaS)**: User management with Clerk, automated subscription tiers with Stripe (Free, Pro, Enterprise), and persistent Bearer API keys.
+  - **Model B (Web3 M2M)**: Autonomous pay-per-scan micro-settlement ($0.01 USDC) governed by a trustless Base Sepolia smart contract escrow.
+- **Deep License Analysis**:
+  - Real-time resolution via NPM Registry API.
+  - Deterministic SPDX compatibility matrix (MIT, Apache-2.0, BSD vs. GPL, LGPL, AGPL copyleft viral obligations).
+  - Semantic LLM parsing via Gemini 2.5 Flash for ambiguous, multi-licensed, or proprietary EULAs.
+- **Supply Chain Vulnerability Scanning**:
+  - Direct integration with OSV.dev batch vulnerability queries.
+  - AI-contextualized CVE severity scoring and concrete drop-in package alternative recommendations.
+- **High-Performance UI**:
+  - Next.js 16 App Router & React 19.
+  - 60 FPS canvas frame-scrubber with Obsidian Glassmorphism aesthetic.
+  - Interactive agent playground for simulating agent-intercepted package additions.
 
 ---
 
 ## 🔧 Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| **Runtime** | Node.js 18+ / TypeScript 5 |
-| **Web Framework** | Next.js 16 (App Router) |
-| **AI Engine** | Google Gemini 2.5 Flash via `@google/genai` |
-| **Blockchain** | CROO CAP SDK (`@croo-network/sdk`) on Base Sepolia |
-| **License DB** | NPM Registry API (unauthenticated) |
-| **CVE DB** | OSV.dev Batch API (unauthenticated) |
-| **Styling** | Vanilla CSS — 3D cinematic animations, glassmorphism |
-
-All external services are **100% free-tier** — no paid API keys required except Gemini (free quota).
-
----
-
-## 🚀 CAP SDK Methods Utilized
-
-| Method | Purpose |
-|--------|---------|
-| `new AgentClient(config, sdkKey)` | Initialize provider agent |
-| `agentClient.connectWebSocket()` | Persistent event stream from CROO network |
-| `stream.on(EventType.NegotiationCreated, ...)` | Receive buyer order requests |
-| `agentClient.getNegotiation(id)` | Fetch negotiation + buyer requirements payload |
-| `agentClient.acceptNegotiation(id)` | Accept + trigger on-chain `createOrder` |
-| `agentClient.rejectNegotiation(id, reason)` | Reject invalid/capacity-exceeded requests |
-| `agentClient.getOrder(id)` | Retrieve order after escrow confirmation |
-| `stream.on(EventType.OrderPaid, ...)` | Trigger audit on-chain payment confirmation |
-| `agentClient.deliverOrder(id, req)` | Deliver structured audit report on-chain |
-| `stream.on(EventType.OrderCompleted, ...)` | Confirm final settlement |
-| `stream.onAny(...)` | Debug catch-all event listener |
-
-### A2A Event Lifecycle
-
-```
-Buyer                                LicenseShield AI Provider
-  │                                          │
-  ├─ negotiateOrder({ requirements: JSON }) ►│
-  │                                          ├─ NegotiationCreated
-  │                                          ├─ getNegotiation() → parse payload
-  │                                          ├─ acceptNegotiation() ──► on-chain createOrder
-  │◄── EventType.OrderCreated ───────────────┤
-  ├─ payOrder() ──────────────────────────────────────────────► Base Sepolia escrow
-  │                                          │◄── EventType.OrderPaid
-  │                                          ├─ NPM Registry fetch (licenses)
-  │                                          ├─ OSV.dev batch query (CVEs)
-  │                                          ├─ Gemini 2.5 Flash per-package scan
-  │                                          ├─ runAIAudit() holistic verdict
-  │                                          ├─ deliverOrder({ schema: AuditReport })
-  │◄── EventType.OrderCompleted ─────────────┤
-  ├─ getDelivery() → receive audit JSON      │
-```
+|-------|------------|
+| **Runtime & Framework** | Node.js 18+ / TypeScript 5 / Next.js 16 (App Router) |
+| **Styling & UI** | Tailwind CSS v4, Framer Motion, Lucide Icons, Three.js |
+| **Authentication** | Clerk (`@clerk/nextjs`) |
+| **Database & ORM** | Supabase PostgreSQL + Prisma ORM |
+| **Billing & Payments** | Stripe (Subscriptions) + Base Sepolia USDC (Micro-escrow) |
+| **Smart Contracts** | Solidity 0.8.20+, OpenZeppelin, Hardhat, Ethers.js v6 |
+| **AI Intelligence** | Google Gemini 2.5 Flash via `@google/genai` |
+| **Security Telemetry** | NPM Registry API + OSV.dev CVE Database |
 
 ---
 
-## 📁 Project Structure
+## 📁 Key File Structure
 
 ```
-LicenseShield AI/
+LicenseShield-AI/
 ├── app/
-│   ├── api/audit/route.ts     # Next.js API route — web UI audit entry point
-│   ├── page.tsx               # Homepage with 3D animated audit UI
-│   ├── vault/page.tsx         # License Vault (browse audited packages)
-│   └── reports/page.tsx       # Reports dashboard
-│
+│   ├── (auth)/                 # Authentication views
+│   ├── api/
+│   │   ├── v1/verify/route.ts  # Real-time package verification
+│   │   ├── v1/audit/route.ts   # Full dependency tree audit endpoint
+│   │   ├── billing/checkout/   # Stripe checkout session creation
+│   │   ├── webhooks/stripe/    # Stripe webhook handler
+│   │   ├── keys/               # API key management
+│   │   └── logs/               # Audit log telemetry
+│   ├── dashboard/              # User dashboard & analytics
+│   ├── layout.tsx              # Root layout with ClerkProvider
+│   └── page.tsx                # Obsidian glassmorphic landing page
+├── components/
+│   ├── AgentPlayground.tsx     # Interactive AI verification playground
+│   ├── HybridPricing.tsx       # Dual Web2 + Web3 pricing comparison
+│   ├── LicenseShieldScrubber.tsx # 60FPS scroll-canvas animation
+│   ├── Navbar.tsx              # Clerk-authenticated navigation header
+│   └── ui/                     # Modular glassmorphic UI components
+├── contracts/
+│   └── LicenseShieldEscrow.sol # Base Sepolia USDC escrow smart contract
 ├── lib/
-│   ├── agentDaemon.ts         # ★ CROO CAP SDK persistent daemon (A2A provider)
-│   ├── agent-loop.ts          # Reusable agent loop module
-│   ├── geminiScanner.ts       # ★ Gemini 2.5 Flash sub-module (license + CVE parsing)
-│   ├── gemini.ts              # Holistic Gemini AI audit function
-│   ├── croo-cap.ts            # CROO settlement for web API route
-│   ├── license-engine.ts      # Deterministic license compatibility matrix
-│   ├── npm-fetcher.ts         # NPM Registry API integration
-│   ├── osv-client.ts          # OSV.dev batch query integration
-│   └── types.ts               # Shared TypeScript interfaces
-│
-├── scripts/
-│   ├── test-buyer-agent.js    # ★ Automated A2A end-to-end test runner
-│   └── run-agent.ts           # Agent daemon entrypoint
-│
-└── .env                       # Environment variables
+│   ├── gemini.ts               # Gemini AI holistic audit engine
+│   ├── geminiScanner.ts        # Gemini license & vulnerability parser
+│   ├── license-engine.ts       # Deterministic license compatibility engine
+│   ├── npm-fetcher.ts          # NPM Registry API client
+│   ├── osv-client.ts           # OSV.dev CVE database client
+│   ├── payment.ts              # Payment verification (Bearer & Escrow)
+│   ├── prisma.ts               # Prisma ORM client
+│   └── stripe.ts               # Stripe SDK client
+├── prisma/
+│   └── schema.prisma           # Database schema (Profile, ApiKey, AuditLog)
+└── scripts/
+    ├── deploy-escrow.ts        # Hardhat / Solc Base Sepolia escrow deployment
+    └── test-hybrid-platform.ts # Comprehensive hybrid test suite
 ```
 
 ---
 
-## ⚙️ Setup
+## ⚙️ Setup & Installation
 
-### Prerequisites
-- Node.js 18+
-- A free [CROO Dashboard](https://croo.network) account with an SDK key
-- A free [Google AI Studio](https://aistudio.google.com) Gemini API key
-
-### 1. Clone & Install
+### 1. Clone Repository & Install Dependencies
 
 ```bash
-git clone <repo-url>
-cd LicenseShield\ AI
+git clone https://github.com/Adityakumarsingh/LicenseShield-AI.git
+cd LicenseShield-AI
 npm install
 ```
 
-### 2. Configure Environment
+### 2. Configure Environment Variables
+
+Create a `.env` file in the root directory:
 
 ```env
-# .env
-GEMINI_API_KEY=AIzaSy...          # Google AI Studio → free tier
-CROO_SDK_KEY=croo_sk_...          # CROO Dashboard → provider SDK key
-CROO_API_URL=https://api.croo.network
-CROO_WS_URL=wss://api.croo.network/ws
+# Database (Supabase PostgreSQL via Prisma)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+
+# Smart Contract Deployment (Base Sepolia)
+PRIVATE_KEY=0x...
+DEPLOYER_WALLET_ADDRESS=0x...
 RPC=https://sepolia.base.org
+ESCROW_CONTRACT_ADDRESS=0x27ea5e193bA7D7296AC6baa051f58707f8c367a5
+TREASURY_WALLET_ADDRESS=0x42B980cCEFF9E8c50E24D9c9a9A0160B5B2b92B4
+
+# Gemini AI Engine
+GEMINI_API_KEY=AIzaSy...
+
+# Stripe Billing
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRO_PRICE_ID=price_...
+STRIPE_ENTERPRISE_PRICE_ID=price_...
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+LICENSE_SHIELD_API_KEYS=ls_live_demo_key_998877,ls_test_key_123456
 ```
 
-### 3. Run
+### 3. Database Migration
 
 ```bash
-# Terminal 1 — Web UI + API
+npx prisma db push
+npx prisma generate
+```
+
+### 4. Run the Development Server
+
+```bash
 npm run dev
-
-# Terminal 2 — CROO Agent Daemon (A2A provider)
-npm run agent
-
-# Terminal 3 — Run automated test suite
-npm run test:agent
 ```
+
+Visit `http://localhost:3000` to launch the platform.
 
 ---
 
-## 🧪 Test Suite
+## 🧪 Testing & Verification
 
-The `scripts/test-buyer-agent.js` simulates three real-world buyer scenarios:
-
-| Scenario | Description | Expected |
-|----------|-------------|----------|
-| **A** | `colors@1.4.1` (protestware CVEs) + `lodash@4.17.20` (prototype pollution) | `FLAGGED` |
-| **B** | `chalk@5.3.0` + `dotenv@16` + `zod@3` (clean, MIT-compatible) | `APPROVED` |
-| **C** | Proprietary project with potentially copyleft dependencies | `APPROVED` (policy-dependent) |
+Run the platform test suite:
 
 ```bash
-npm run test:agent
+# Run the hybrid platform test suite (Solidity compilation, Model A & Model B verification)
+npm run test:hybrid
+
+# Compile the escrow smart contract
+npm run compile
 ```
 
 ---
 
-## 🔍 Gemini 2.5 Flash Integration
+## 🔍 API Usage
 
-### License Parser (`lib/geminiScanner.ts`)
+### Real-Time Dependency Verification (`POST /api/v1/verify`)
 
-```typescript
-// Parse ambiguous/custom license text
-const verdict = await parseLicenseText(
-  'MIT OR GPL-3.0-only',  // rawLicenseText
-  'MIT',                   // projectLicense
-  'some-package'           // packageName
-);
-// → { status: 'FLAGGED', reason: '...', suggestedAlternatives: ['chalk', 'colorette'] }
+```bash
+curl -X POST http://localhost:3000/api/v1/verify \
+  -H "Authorization: Bearer ls_live_demo_key_998877" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "packages": ["axios@1.6.0", "lodash@4.17.20"],
+    "targetPolicy": "MIT",
+    "agentId": "claude-code-subagent"
+  }'
 ```
 
-### Vulnerability Contextualizer (`lib/geminiScanner.ts`)
+### Full Audit Engine (`POST /api/v1/audit`)
 
-```typescript
-// Contextualize OSV vulnerability data
-const verdict = await analyzeVulnerabilities(
-  'lodash', '4.17.20', osvVulns, 'MIT-licensed dependency'
-);
-// → { status: 'FLAGGED', reason: 'Prototype pollution (HIGH)...', suggestedAlternatives: ['radash'] }
+```bash
+curl -X POST http://localhost:3000/api/v1/audit \
+  -H "Authorization: Bearer ls_live_demo_key_998877" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectLicense": "MIT",
+    "dependencies": {
+      "axios": "^1.6.0",
+      "lodash": "^4.17.20"
+    }
+  }'
 ```
-
-Both functions enforce `responseMimeType: "application/json"` with a strict `responseSchema` ensuring **100% machine-parseable output**.
-
----
-
-## 📊 Audit Report Schema
-
-```typescript
-interface AuditReport {
-  status: 'APPROVED' | 'FLAGGED';
-  risks: {
-    package: string;
-    type: 'LICENSE' | 'VULNERABILITY';
-    severity: 'HIGH' | 'MEDIUM' | 'LOW';
-    detail: string;
-  }[];
-  suggestions: string[];
-  aiAnalysis: string;           // Gemini holistic summary
-  perPackageInsights: {         // Per-package Gemini verdicts
-    package: string;
-    resolvedLicense: string;
-    geminiLicenseVerdict?: ScannerVerdict;
-    geminiVulnVerdict?: ScannerVerdict;
-  }[];
-  scannedAt: string;            // ISO timestamp
-  orderId: string;              // CROO order ID
-  agentVersion: string;
-}
-```
-
----
-
-## 🌐 Free-Tier Services Used
-
-| Service | Usage | Cost |
-|---------|-------|------|
-| [NPM Registry](https://registry.npmjs.org) | License + version resolution | Free |
-| [OSV.dev](https://osv.dev) | Vulnerability database queries | Free |
-| [Google AI Studio](https://aistudio.google.com) | Gemini 2.5 Flash API | Free quota |
-| [CROO Network](https://croo.network) | A2A order settlement on Base Sepolia | Free testnet |
-| [Base Sepolia](https://sepolia.base.org) | On-chain escrow (testnet) | Free |
 
 ---
 
 ## 📜 License
 
-MIT — See [LICENSE](LICENSE)
-
----
-
-*Built for the CROO Agent Hackathon — Data & Verification / Dev Tooling Track*
+MIT License — see [LICENSE](LICENSE) for details.

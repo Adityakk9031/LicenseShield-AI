@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 const NAV_ITEMS = [
   { id: 'hero',       label: 'Overview',      numeral: 'I' },
   { id: 'gemini',     label: 'Gemini AI',     numeral: 'II' },
-  { id: 'agentic',    label: 'CROO Agent',    numeral: 'III' },
+  { id: 'agentic',    label: 'AI Agent',      numeral: 'III' },
   { id: 'payment',    label: 'Hybrid Pay',    numeral: 'IV' },
   { id: 'operations', label: 'Audit Console', numeral: 'V' },
   { id: 'settlement', label: 'Base Escrow',   numeral: 'VI' },

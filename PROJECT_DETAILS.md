@@ -63,9 +63,9 @@
 
 ## ✅ Completed Tasks & Technical Breakdown
 
-### 1. Stripped Legacy CROO Dependencies
-- Removed `@croo-network/sdk` dependency from `package.json`.
-- Deleted WebSocket daemons and legacy settlement files (`lib/agentDaemon.ts`, `lib/croo-cap.ts`, `lib/agent-loop.ts`, `scripts/run-agent.ts`, `scripts/test-buyer-agent.js`).
+### 1. Stripped Legacy External Agent Protocol Dependencies
+- Removed external legacy agent SDK dependencies from `package.json`.
+- Deleted legacy WebSocket daemons and obsolete settlement scripts (`lib/agentDaemon.ts`, `lib/agent-loop.ts`, `scripts/run-agent.ts`, `scripts/test-buyer-agent.js`).
 - Updated legacy `/api/audit` route to proxy directly to `/api/v1/audit`.
 
 ---

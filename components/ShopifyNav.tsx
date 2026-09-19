@@ -26,7 +26,7 @@ export default function ShopifyNav() {
             LicenseShield
             <span className="nav-brand-edition"> | Winter '26</span>
           </div>
-          <span className="nav-badge">CROO Hackathon</span>
+          <span className="nav-badge">AI Security</span>
         </div>
       </div>
 
