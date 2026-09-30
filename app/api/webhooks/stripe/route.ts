@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { hashApiKey } from '@/lib/payment';
+import { activatePaidTier, TIER_LIMITS } from '@/lib/billing';
 import { PlanTier, SubscriptionStatus } from '@prisma/client';
 
 export async function POST(req: Request) {
@@ -31,48 +30,23 @@ export async function POST(req: Request) {
       const userId = session.client_reference_id || session.metadata?.userId;
       const customerId = session.customer as string;
       const subscriptionId = session.subscription as string;
+      const tier = session.metadata?.tier === 'ENTERPRISE' ? 'ENTERPRISE' : 'PRO';
 
       console.log(`[Stripe Webhook] Checkout completed for User: ${userId}, Customer: ${customerId}`);
 
       if (userId) {
-        // 1. Upsert Profile record via Prisma to PRO tier
-        await prisma.profile.upsert({
-          where: { id: userId },
-          update: {
-            stripeCustomerId: customerId,
-            stripeSubscriptionId: subscriptionId,
-            planTier: PlanTier.PRO,
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-          },
-          create: {
-            id: userId,
-            email: session.customer_details?.email || 'developer@company.com',
-            stripeCustomerId: customerId,
-            stripeSubscriptionId: subscriptionId,
-            planTier: PlanTier.PRO,
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-          },
+        // Idempotent: upgrades Profile to the paid tier and provisions the
+        // tier's live API key (skipped if the verify-session path already did).
+        const result = await activatePaidTier({
+          userId,
+          email: session.customer_details?.email || null,
+          customerId,
+          subscriptionId,
+          tier,
         });
-
-        // 2. Generate a new live API Key (ls_live_...) and store via Prisma
-        const rawSecret = crypto.randomBytes(16).toString('hex');
-        const rawApiKey = `ls_live_${rawSecret}`;
-        const keyHash = hashApiKey(rawApiKey);
-        const keyPrefix = rawApiKey.slice(0, 12);
-
-        await prisma.apiKey.create({
-          data: {
-            userId,
-            keyHash,
-            keyPrefix,
-            name: 'Pro Subscription Live Key',
-            monthlyLimit: 10000,
-            usageCount: 0,
-            isActive: true,
-          },
-        });
-
-        console.log(`[Stripe Webhook] Created new Pro API Key (${keyPrefix}...) for User ${userId}`);
+        console.log(
+          `[Stripe Webhook] Tier ${result.planTier} active for ${userId}${result.generatedKey ? ', new API key provisioned' : ' (key already provisioned)'}`
+        );
       }
       break;
     }

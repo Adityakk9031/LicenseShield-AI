@@ -25,12 +25,19 @@ export async function POST(req: Request) {
       }
     }
 
-    const body = (await req.json().catch(() => ({}))) as any;
+    // Read the raw body once: JSON for parsing, exact bytes for escrow payload binding
+    const rawBody = await req.text();
+    let body: any = {};
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      body = {};
+    }
     const auditId = auditIdHeader || body.auditId || `vfy_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
     // Check Model B (Web3 Escrow Lock)
     if (!isAuthorized && auditIdHeader) {
-      const isLocked = await verifyEscrowLock(auditId);
+      const isLocked = await verifyEscrowLock(auditId, rawBody);
       if (isLocked) {
         isAuthorized = true;
         authModel = 'ModelB_Web3';

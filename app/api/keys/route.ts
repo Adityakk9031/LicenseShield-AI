@@ -2,19 +2,16 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { hashApiKey } from '@/lib/payment';
-import { createClient } from '@/lib/supabase-server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 
 // GET /api/keys — List user API keys
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { userId } = await auth();
 
-    if (!session?.user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     const keys = await prisma.apiKey.findMany({
       where: { userId },
@@ -40,14 +37,11 @@ export async function GET() {
 // POST /api/keys — Create a new API key
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { userId } = await auth();
 
-    if (!session?.user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = session.user.id;
     const body = await req.json().catch(() => ({}));
     const name = body.name?.trim() || 'New API Key';
 
@@ -57,10 +51,11 @@ export async function POST(req: Request) {
     });
 
     if (!profile) {
+      const clerkUser = await currentUser();
       profile = await prisma.profile.create({
         data: {
           id: userId,
-          email: session.user.email || 'developer@user.com',
+          email: clerkUser?.emailAddresses[0]?.emailAddress || 'developer@user.com',
           planTier: 'FREE',
           subscriptionStatus: 'ACTIVE',
         },

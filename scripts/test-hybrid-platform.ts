@@ -19,22 +19,33 @@ async function testSuite() {
 
   // Test 2: Model A Web2 API Key Verification
   console.log('Test 2: Verifying Model A (Web2 SaaS API Key)...');
-  const validKey = 'Bearer ls_live_demo_key_998877';
-  const invalidKey = 'Bearer invalid_key_000';
-  const validRes = await verifyApiKey(validKey);
-  const invalidRes = await verifyApiKey(invalidKey);
+  const envKeys = (process.env.LICENSE_SHIELD_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
+  const invalidKey = 'Bearer ls_live_forged_key_000'; // must NOT authenticate — no prefix bypass
+  const forgedRes = await verifyApiKey(invalidKey);
 
-  if (validRes.authorized && !invalidRes.authorized) {
-    console.log('✅ Model A Bearer API Key validation working correctly!\n');
+  if (forgedRes.authorized) {
+    console.error('❌ SECURITY: forged ls_live_* prefix key was accepted!\n');
   } else {
-    console.error('❌ Model A API Key validation failed.\n');
+    console.log('✅ Forged ls_live_* prefix key correctly rejected.\n');
+  }
+
+  if (envKeys.length > 0) {
+    const validRes = await verifyApiKey(`Bearer ${envKeys[0]}`);
+    if (validRes.authorized) {
+      console.log('✅ Model A Bearer API Key validation working correctly!\n');
+    } else {
+      console.error('❌ Model A API Key validation failed for env-configured key.\n');
+    }
+  } else {
+    console.warn('⚠️ LICENSE_SHIELD_API_KEYS not set — skipping env-key validation.\n');
   }
 
 
   // Test 3: Model B Web3 Escrow Lock Verification
   console.log('Test 3: Testing Model B (Web3 Escrow Lock Check)...');
   const sampleAuditId = 'audit_test_12345';
-  const isLocked = await verifyEscrowLock(sampleAuditId);
+  const samplePayload = JSON.stringify({ dependencies: ['lodash@4.17.20'] });
+  const isLocked = await verifyEscrowLock(sampleAuditId, samplePayload);
   console.log(`ℹ️ Escrow lock state for "${sampleAuditId}": ${isLocked ? 'LOCKED' : 'NOT_FOUND / UNPAID'}`);
   console.log('✅ Web3 Escrow lock provider check completed successfully!\n');
 

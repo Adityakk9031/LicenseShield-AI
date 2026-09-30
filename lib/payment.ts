@@ -88,16 +88,12 @@ export async function verifyApiKey(key: string): Promise<VerifiedAuthResult> {
     console.warn('[Payment] Prisma API key query warning, checking fallback env:', dbErr);
   }
 
-  // 2. Fallback check against environment variable keys & live-generated dev keys
+  // 2. Fallback: exact-match against environment-configured keys only.
+  // No prefix matching — a forged `ls_live_*` string must never authenticate.
   const validKeysEnv = process.env.LICENSE_SHIELD_API_KEYS || process.env.VALID_API_KEYS || '';
   const validKeys = validKeysEnv.split(',').map((k) => k.trim()).filter(Boolean);
-  validKeys.push('ls_live_demo_key_998877', 'ls_test_key_123456');
 
-  if (
-    validKeys.includes(cleanKey) ||
-    cleanKey.startsWith('ls_live_') ||
-    cleanKey.startsWith('ls_test_')
-  ) {
+  if (validKeys.includes(cleanKey)) {
     return { authorized: true, userId: undefined };
   }
 
@@ -107,11 +103,24 @@ export async function verifyApiKey(key: string): Promise<VerifiedAuthResult> {
 // ── Model B: Web3 Smart Contract Escrow Verification ───────────────────────────
 
 /**
+ * hashPayload
+ * Canonical payload-hash scheme binding an escrow lock to one exact request body.
+ * The buyer computes keccak256(utf8(body)) and passes it to `lockAuditFee`;
+ * the API recomputes it over the received raw body before honoring the lock.
+ * Both sides must agree byte-for-byte, so the SDK must send the identical JSON string.
+ */
+export function hashPayload(rawPayload: string): string {
+  return ethers.id(rawPayload);
+}
+
+/**
  * verifyEscrowLock
  * Queries the LicenseShieldEscrow smart contract on Base Sepolia to verify that
- * $0.01 USDC has been locked into escrow for the given auditId in 'Pending' state.
+ * $0.01 USDC has been locked into escrow for the given auditId in 'Pending' state,
+ * AND that the on-chain payloadHash matches keccak256 of the incoming request body.
+ * This binding prevents a single $0.01 lock from being replayed across many audits.
  */
-export async function verifyEscrowLock(auditId: string): Promise<boolean> {
+export async function verifyEscrowLock(auditId: string, expectedPayload: string): Promise<boolean> {
   try {
     if (!auditId) return false;
 
@@ -133,15 +142,26 @@ export async function verifyEscrowLock(auditId: string): Promise<boolean> {
 
     const buyer: string = auditData[0];
     const amount: bigint = auditData[1];
+    const payloadHash: string = auditData[2];
     const state: number = Number(auditData[3]);
 
-    if (buyer !== ethers.ZeroAddress && state === AuditState.Pending && amount >= auditFee) {
-      console.log(`[Payment] Escrow verified for auditId ${auditId}: Buyer=${buyer}, Amount=${amount.toString()}, State=Pending`);
-      return true;
+    if (buyer === ethers.ZeroAddress || state !== AuditState.Pending || amount < auditFee) {
+      console.warn(`[Payment] Escrow check failed for auditId ${auditId}: State=${state}, Amount=${amount.toString()}`);
+      return false;
     }
 
-    console.warn(`[Payment] Escrow check failed for auditId ${auditId}: State=${state}, Amount=${amount.toString()}`);
-    return false;
+    if (payloadHash === ethers.ZeroHash) {
+      console.warn(`[Payment] Escrow lock for ${auditId} carries a zero payloadHash — unbound locks are rejected.`);
+      return false;
+    }
+
+    if (payloadHash !== hashPayload(expectedPayload)) {
+      console.warn(`[Payment] payloadHash mismatch for auditId ${auditId} — lock was made for a different request body.`);
+      return false;
+    }
+
+    console.log(`[Payment] Escrow verified for auditId ${auditId}: Buyer=${buyer}, Amount=${amount.toString()}, State=Pending, payloadHash bound.`);
+    return true;
   } catch (error) {
     console.error(`[Payment] Error verifying escrow lock for auditId ${auditId}:`, error);
     return false;

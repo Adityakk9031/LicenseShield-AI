@@ -23,27 +23,30 @@ const CheckIcon = () => (
 export default function BillingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
 
-  const handleSubscribe = async (priceId: string) => {
+  const handleSubscribe = async (tier: 'PRO' | 'ENTERPRISE') => {
     if (loadingPriceId) return;
-    setLoadingPriceId(priceId);
+    setLoadingPriceId(tier);
 
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ tier }),
       });
 
       if (!res.ok) {
-        throw new Error(`Checkout failed: ${res.statusText}`);
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Checkout failed: ${res.statusText}`);
       }
 
       const data = await res.json();
       if (data?.url) {
         window.location.href = data.url;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Subscription error:', err);
+      alert(`Checkout could not start: ${err?.message || 'unknown error'}`);
+    } finally {
       setLoadingPriceId(null);
     }
   };
@@ -153,10 +156,10 @@ export default function BillingPage() {
             <button
               className="btn-brand billing-cta"
               style={{ width: '100%' }}
-              onClick={() => handleSubscribe('price_test_demo_pro_tier')}
-              disabled={loadingPriceId === 'price_test_demo_pro_tier'}
+              onClick={() => handleSubscribe('PRO')}
+              disabled={loadingPriceId === 'PRO'}
             >
-              {loadingPriceId === 'price_test_demo_pro_tier'
+              {loadingPriceId === 'PRO'
                 ? 'Redirecting...'
                 : 'Upgrade to Pro'}
             </button>
@@ -186,10 +189,10 @@ export default function BillingPage() {
             <button
               className="btn-emerald billing-cta"
               style={{ width: '100%' }}
-              onClick={() => handleSubscribe('price_test_demo_enterprise_tier')}
-              disabled={loadingPriceId === 'price_test_demo_enterprise_tier'}
+              onClick={() => handleSubscribe('ENTERPRISE')}
+              disabled={loadingPriceId === 'ENTERPRISE'}
             >
-              {loadingPriceId === 'price_test_demo_enterprise_tier'
+              {loadingPriceId === 'ENTERPRISE'
                 ? 'Redirecting...'
                 : 'Upgrade to Enterprise'}
             </button>

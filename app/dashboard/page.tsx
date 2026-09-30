@@ -18,18 +18,67 @@ interface LogEntry {
   reportOutput?: { status?: string };
 }
 
+interface SubscriptionInfo {
+  planTier: 'FREE' | 'PRO' | 'ENTERPRISE';
+  subscriptionStatus: string;
+  hasSubscription: boolean;
+}
+
+const TIER_LABELS: Record<string, string> = {
+  FREE: 'Free Developer',
+  PRO: 'Pro Team',
+  ENTERPRISE: 'Enterprise',
+};
+
+const TIER_SCANS: Record<string, string> = {
+  FREE: '100 scans / month included',
+  PRO: '10,000 scans / month included',
+  ENTERPRISE: 'Unlimited scans included',
+};
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [apiKeyInfo, setApiKeyInfo] = useState<ApiKeyInfo | null>(null);
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   useEffect(() => {
+    async function activateCheckout() {
+      // Returning from Stripe Checkout: ?checkout=success&session_id=cs_...
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      if (params.get('checkout') !== 'success' || !sessionId) return;
+
+      try {
+        const res = await fetch('/api/billing/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCheckoutSuccess(true);
+          if (data.generatedKey) setGeneratedKey(data.generatedKey);
+        }
+      } catch (err) {
+        console.error('Checkout activation failed:', err);
+      }
+      // Clean the URL so refresh doesn't re-verify
+      window.history.replaceState({}, '', '/dashboard');
+    }
+
     async function loadDashboardData() {
       try {
-        const [keysRes, logsRes] = await Promise.all([
+        const [keysRes, logsRes, subRes] = await Promise.all([
           fetch('/api/keys').then((r) => (r.ok ? r.json() : { keys: [] })),
           fetch('/api/logs').then((r) => (r.ok ? r.json() : { logs: [] })),
+          fetch('/api/billing/subscription').then((r) => (r.ok ? r.json() : null)).catch(() => null),
         ]);
+
+        if (subRes) setSubscription(subRes);
 
         const activeKeys = keysRes.keys || [];
         if (activeKeys.length > 0) {
@@ -47,8 +96,23 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
-    loadDashboardData();
+
+    activateCheckout().finally(() => loadDashboardData());
   }, []);
+
+  const copyKey = async () => {
+    if (!generatedKey) return;
+    try {
+      await navigator.clipboard.writeText(generatedKey);
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 2500);
+    } catch {
+      // clipboard unavailable — user can select the text manually
+    }
+  };
+
+  const planTier = subscription?.planTier ?? 'FREE';
+  const isPaidTier = planTier !== 'FREE';
 
   const usageCount = apiKeyInfo?.usageCount ?? 0;
   const monthlyLimit = apiKeyInfo?.monthlyLimit ?? 100;
@@ -65,6 +129,62 @@ export default function DashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      {/* Checkout success banner */}
+      {checkoutSuccess && (
+        <div
+          style={{
+            background: 'rgba(16,185,129,0.06)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '20px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>✅</span>
+            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--emerald-light)' }}>
+              Payment successful — {TIER_LABELS[planTier]} plan activated!
+            </div>
+          </div>
+          <p style={{ fontSize: 12.5, color: 'var(--n-500)', lineHeight: 1.6 }}>
+            Your subscription is active and your account has been upgraded. Your API key quota is now{' '}
+            {planTier === 'ENTERPRISE' ? '1,000,000' : '10,000'} scans/month.
+          </p>
+          {generatedKey && (
+            <div
+              style={{
+                marginTop: 12,
+                background: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                borderRadius: 10,
+                padding: '12px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--emerald-light)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                  Your new live API key — shown only once
+                </div>
+                <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--white)', wordBreak: 'break-all' }}>
+                  {generatedKey}
+                </code>
+              </div>
+              <button
+                type="button"
+                onClick={copyKey}
+                className="btn-primary-glow"
+                style={{ padding: '8px 16px', fontSize: 12, whiteSpace: 'nowrap' }}
+              >
+                {keyCopied ? 'Copied ✓' : 'Copy key'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Page heading */}
       <div>
         <div className="section-eyebrow" style={{ marginBottom: 8 }}>
@@ -82,36 +202,63 @@ export default function DashboardPage() {
       {/* Stats row */}
       <div className="dash-stat-grid">
         {/* Plan card */}
-        <div className="dash-stat-card" style={{ borderColor: 'rgba(124,58,237,0.2)' }}>
+        <div className="dash-stat-card" style={{ borderColor: isPaidTier ? 'rgba(16,185,129,0.3)' : 'rgba(124,58,237,0.2)' }}>
           <div className="dash-stat-label">
             Current Plan
-            <span className="plan-tag pro">PRO</span>
+            <span className={`plan-tag ${isPaidTier ? 'pro' : ''}`} style={isPaidTier ? { background: 'rgba(16,185,129,0.12)', color: 'var(--emerald-light)', borderColor: 'rgba(16,185,129,0.35)' } : undefined}>
+              {planTier}
+            </span>
           </div>
-          <div className="dash-stat-value" style={{ fontSize: 28, color: 'var(--violet-light)' }}>
-            Free Developer
+          <div
+            className="dash-stat-value"
+            style={{ fontSize: 28, color: isPaidTier ? 'var(--emerald-light)' : 'var(--violet-light)' }}
+          >
+            {TIER_LABELS[planTier]}
           </div>
           <div className="dash-stat-sub" style={{ marginTop: 12 }}>
-            100 scans / month included
+            {TIER_SCANS[planTier]}
           </div>
-          <Link
-            href="/billing"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              marginTop: 16,
-              fontSize: 12,
-              fontWeight: 700,
-              color: 'var(--violet-light)',
-              background: 'rgba(124,58,237,0.08)',
-              border: '1px solid rgba(124,58,237,0.2)',
-              borderRadius: 'var(--radius-full)',
-              padding: '5px 12px',
-              transition: 'all 0.2s',
-            }}
-          >
-            Upgrade to Pro →
-          </Link>
+          {isPaidTier ? (
+            <Link
+              href="/billing"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 16,
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--emerald-light)',
+                background: 'rgba(16,185,129,0.08)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                borderRadius: 'var(--radius-full)',
+                padding: '5px 12px',
+                transition: 'all 0.2s',
+              }}
+            >
+              Manage billing →
+            </Link>
+          ) : (
+            <Link
+              href="/billing"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 16,
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--violet-light)',
+                background: 'rgba(124,58,237,0.08)',
+                border: '1px solid rgba(124,58,237,0.2)',
+                borderRadius: 'var(--radius-full)',
+                padding: '5px 12px',
+                transition: 'all 0.2s',
+              }}
+            >
+              Upgrade to Pro →
+            </Link>
+          )}
         </div>
 
         {/* Monthly quota card */}

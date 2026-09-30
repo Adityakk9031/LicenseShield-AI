@@ -9,15 +9,17 @@ export const stripe = new Stripe(stripeSecretKey, {
 /**
  * Creates a Stripe Test Checkout Session for demo subscription upgrades.
  *
- * @param userId Supabase User ID (profile ID)
+ * @param userId Clerk User ID (Profile ID)
  * @param priceId Stripe Test Price ID (e.g. Pro or Enterprise plan)
+ * @param tier Plan tier stored in session metadata for post-payment activation
  * @returns Checkout session URL for redirection
  */
 export async function createDemoCheckoutSession(
   userId: string,
-  priceId: string
+  priceId: string,
+  tier: 'PRO' | 'ENTERPRISE' = 'PRO'
 ): Promise<string> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -31,8 +33,9 @@ export async function createDemoCheckoutSession(
     client_reference_id: userId,
     metadata: {
       userId,
+      tier,
     },
-    success_url: `${appUrl}/reports?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${appUrl}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/billing?checkout=cancel`,
   });
 

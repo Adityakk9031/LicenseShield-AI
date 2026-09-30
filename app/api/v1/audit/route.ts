@@ -23,12 +23,19 @@ export async function POST(req: Request) {
       }
     }
 
-    const body = (await req.json().catch(() => ({}))) as any;
+    // Read the raw body once: JSON for parsing, exact bytes for escrow payload binding
+    const rawBody = await req.text();
+    let body: any = {};
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      body = {};
+    }
     const auditId = auditIdHeader || body.auditId || body.orderId || `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     // Check Model B (Web3 Micro-API Escrow Lock) if not authorized via API key
     if (!isAuthorized && auditId) {
-      const isLocked = await verifyEscrowLock(auditId);
+      const isLocked = await verifyEscrowLock(auditId, rawBody);
       if (isLocked) {
         isAuthorized = true;
         authModel = 'ModelB_Web3';
@@ -49,6 +56,7 @@ export async function POST(req: Request) {
             network: 'eip155:84532',
             contractAddress: escrowContract,
             lockFunction: 'lockAuditFee(bytes32 auditId, bytes32 payloadHash)',
+            payloadHashSpec: 'keccak256(utf8Bytes(exact JSON request body)) — lock with this hash, then send the byte-identical body',
           },
         },
         { status: 402 }

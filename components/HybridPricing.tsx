@@ -16,22 +16,22 @@ export default function HybridPricing() {
   const estimatedSavings = Math.max(0, Number(traditionalCost) - Number(web3MonthlyCost)).toFixed(2);
   const savingsPercent = Math.round(((Number(traditionalCost) - Number(web3MonthlyCost)) / Number(traditionalCost)) * 100);
 
-  const handleStripeCheckout = async (planTier: string, priceId: string) => {
+  const handleStripeCheckout = async (planTier: 'PRO' | 'ENTERPRISE') => {
     setCheckoutLoading(planTier);
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, tier: planTier }),
+        body: JSON.stringify({ tier: planTier }),
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(`Demo Checkout: Upgraded to ${planTier} tier successfully!`);
+        alert(`Checkout could not start: ${data.error || 'no checkout URL returned'}`);
       }
-    } catch {
-      alert(`Demo Checkout: Upgraded to ${planTier} tier successfully!`);
+    } catch (err: any) {
+      alert(`Checkout could not start: ${err?.message || 'network error'}`);
     } finally {
       setCheckoutLoading(null);
     }
@@ -205,7 +205,7 @@ export default function HybridPricing() {
             </div>
 
             <button
-              onClick={() => handleStripeCheckout('PRO', 'price_pro_subscription')}
+              onClick={() => handleStripeCheckout('PRO')}
               disabled={checkoutLoading === 'PRO'}
               className="btn-primary-glow"
               type="button"
@@ -254,7 +254,7 @@ export default function HybridPricing() {
             </div>
 
             <button
-              onClick={() => handleStripeCheckout('ENTERPRISE', 'price_enterprise_subscription')}
+              onClick={() => handleStripeCheckout('ENTERPRISE')}
               disabled={checkoutLoading === 'ENTERPRISE'}
               className="btn-secondary-glass"
               type="button"

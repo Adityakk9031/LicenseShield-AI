@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { hashApiKey } from '@/lib/payment';
-import { createClient } from '@/lib/supabase-server';
+import { auth } from '@clerk/nextjs/server';
 
 export async function POST() {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { userId } = await auth();
 
-    if (!session?.user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     // 1. Deactivate old keys for user via Prisma
     await prisma.apiKey.updateMany({
