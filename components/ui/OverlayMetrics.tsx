@@ -15,7 +15,7 @@ export default function OverlayMetrics() {
 
   const metrics = [
     { label: 'Total Packages Scanned', value: '142,890+', tag: 'NPM REGISTRY', desc: '+18.4% this week' },
-    { label: 'AI Reasoning Latency', value: '420ms', tag: 'PIPELINE', desc: 'Gemini 2.5 Flash Engine' },
+    { label: 'AI Reasoning Latency', value: '420ms', tag: 'PIPELINE', desc: 'Gemini 3.5 Flash Engine' },
     { label: 'Vulnerabilities Triaged', value: '18,420', tag: 'SECURITY', desc: 'OSV Dev Database Synced' },
     { label: 'On-Chain Escrow Fees', value: '$0.01 USDC', tag: 'SETTLEMENT', desc: 'Base Sepolia Testnet' },
   ];

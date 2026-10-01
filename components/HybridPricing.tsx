@@ -200,7 +200,7 @@ export default function HybridPricing() {
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: '#A5B4FC' }}>✓</span>
-                  <span>Gemini 2.5 Flash AI Engine</span>
+                  <span>Gemini 3.5 Flash AI Engine</span>
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: '#A5B4FC' }}>✓</span>

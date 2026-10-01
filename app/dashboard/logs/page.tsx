@@ -299,7 +299,7 @@ export default function AuditLogsPage() {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                ✦ Gemini 2.5 Flash AI Analysis
+                ✦ Gemini 3.5 Flash AI Analysis
               </div>
               <p style={{ fontSize: 13, color: 'var(--n-400)', lineHeight: 1.7 }}>
                 {selectedLog.reportOutput.aiAnalysis}

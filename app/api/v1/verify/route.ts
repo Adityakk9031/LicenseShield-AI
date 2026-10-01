@@ -165,7 +165,7 @@ export async function POST(req: Request) {
       overallStatus = 'WARN';
     }
 
-    // ── AI Explanation with Gemini 2.5 Flash ────────────────────────────────────
+    // ── AI Explanation with Gemini 3.5 Flash ────────────────────────────────────
     let aiExplanation = '';
     let aiRecommendation = '';
     const geminiKey = process.env.GEMINI_API_KEY;
@@ -184,7 +184,7 @@ Provide a strict JSON response with:
 `;
 
         const geminiRes = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash',
           contents: systemPrompt,
           config: {
             responseMimeType: 'application/json',

@@ -138,7 +138,7 @@ export default function HeroAudit({ onAuditComplete }: HeroAuditProps) {
       <div className="hero-content">
         <div className="hero-tag">
           <span className="hero-tag-glow"></span>
-          <span className="hero-tag-text">Gemini 2.5 / 3.5 Flash · Base Sepolia Escrow Engine</span>
+          <span className="hero-tag-text">Gemini 3.5 Flash · Base Sepolia Escrow Engine</span>
         </div>
 
         <h1 className="hero-title">

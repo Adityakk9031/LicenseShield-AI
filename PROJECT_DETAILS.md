@@ -7,7 +7,7 @@
 
 ## 🌟 Executive Summary
 
-**LicenseShield AI** has been fully refactored from a single-framework dependency agent into a standalone, enterprise-grade hybrid audit engine. It provides automated open-source license compliance checks and CVE security vulnerability scanning for Node.js / NPM dependency trees, powered by **Google Gemini 2.5 / 3.5 Flash** via `@google/genai`.
+**LicenseShield AI** has been fully refactored from a single-framework dependency agent into a standalone, enterprise-grade hybrid audit engine. It provides automated open-source license compliance checks and CVE security vulnerability scanning for Node.js / NPM dependency trees, powered by **Google Gemini 3.5 Flash** via `@google/genai`.
 
 ---
 
@@ -47,7 +47,7 @@
                                                     │
                                                     ▼
                                     ┌───────────────────────────────┐
-                                    │ Gemini 2.5 / 3.5 Flash Engine │
+                                    │ Gemini 3.5 Flash Engine │
                                     │  - Strict JSON Schema Output  │
                                     │  - Holistic Risk & Verdict    │
                                     └───────────────┬───────────────┘
@@ -125,7 +125,7 @@
      }
      ```
 * **Concurrent Data Ingestion:** Uses `Promise.allSettled()` to query NPM Registry (`registry.npmjs.org`) for license tags and OSV.dev (`api.osv.dev`) for CVE records simultaneously.
-* **AI Analysis:** Uses `@google/genai` (`gemini-2.5-flash`) with structured JSON schema (`responseSchema`) to enforce strictly machine-parseable outputs (`APPROVED` vs `FLAGGED`).
+* **AI Analysis:** Uses `@google/genai` (`gemini-3.5-flash`) with structured JSON schema (`responseSchema`) to enforce strictly machine-parseable outputs (`APPROVED` vs `FLAGGED`).
 * **Deterministic Fallback:** Features [`lib/license-engine.ts`](file:///d:/LicenseShield%20AI/lib/license-engine.ts) for offline fallback checking if AI is unavailable.
 
 ---
@@ -191,6 +191,6 @@ LICENSE_SHIELD_API_KEYS=ls_...    # Comma-separated Web2 SaaS API keys
 | **Smart Contract** | Complete | Solidity 0.8.20 + OpenZeppelin + Base Sepolia |
 | **Web2 API Auth** | Complete | Bearer Token Validation |
 | **Web3 Micro-API** | Complete | On-Chain USDC Escrow Lock + Settlement |
-| **Audit Engine** | Complete | NPM Registry + OSV.dev + Gemini 2.5/3.5 Flash |
+| **Audit Engine** | Complete | NPM Registry + OSV.dev + Gemini 3.5 Flash |
 | **Challenge Mode**| Complete | HTTP 402 Payment Required |
 | **Type Safety**   | Complete | TypeScript 5 (`tsc --noEmit` clean) |

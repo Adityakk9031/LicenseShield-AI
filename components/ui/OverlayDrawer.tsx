@@ -454,7 +454,7 @@ export default function OverlayDrawer() {
             {loading ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #04060A', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-                <span>Auditing NPM &amp; OSV Databases with Gemini 2.5...</span>
+                <span>Auditing NPM &amp; OSV Databases with Gemini 3.5...</span>
               </span>
             ) : (
               <>

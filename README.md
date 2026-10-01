@@ -2,7 +2,7 @@
 
 > **Autonomous Open-Source Security & License Intelligence Engine for AI Coding Agents and Engineering Teams**
 
-LicenseShield AI is an autonomous hybrid security and license intelligence audit engine that protects modern software repositories from unauthorized AI code generation dependencies, copyleft license conflicts, and supply chain CVE vulnerabilities. Powered by **Google Gemini 2.5 Flash** via `@google/genai` and settled on **Base Sepolia** via a dedicated Smart Contract Escrow for Web3 micro-transactions.
+LicenseShield AI is an autonomous hybrid security and license intelligence audit engine that protects modern software repositories from unauthorized AI code generation dependencies, copyleft license conflicts, and supply chain CVE vulnerabilities. Powered by **Google Gemini 3.5 Flash** via `@google/genai` and settled on **Base Sepolia** via a dedicated Smart Contract Escrow for Web3 micro-transactions.
 
 ---
 
@@ -27,7 +27,7 @@ LicenseShield AI is an autonomous hybrid security and license intelligence audit
                                                     │
                                     ┌───────────────┴───────────────┐
                                     ▼                               ▼
-                      Concurrent Metadata & Security     Gemini 2.5 Flash Engine
+                      Concurrent Metadata & Security     Gemini 3.5 Flash Engine
                       • NPM Registry API                 • Strict JSON Output Schema
                       • OSV.dev CVE Ingestion            • Semantic License Analysis
                                     │                               │
@@ -51,7 +51,7 @@ LicenseShield AI is an autonomous hybrid security and license intelligence audit
 - **Deep License Analysis**:
   - Real-time resolution via NPM Registry API.
   - Deterministic SPDX compatibility matrix (MIT, Apache-2.0, BSD vs. GPL, LGPL, AGPL copyleft viral obligations).
-  - Semantic LLM parsing via Gemini 2.5 Flash for ambiguous, multi-licensed, or proprietary EULAs.
+  - Semantic LLM parsing via Gemini 3.5 Flash for ambiguous, multi-licensed, or proprietary EULAs.
 - **Supply Chain Vulnerability Scanning**:
   - Direct integration with OSV.dev batch vulnerability queries.
   - AI-contextualized CVE severity scoring and concrete drop-in package alternative recommendations.
@@ -72,7 +72,7 @@ LicenseShield AI is an autonomous hybrid security and license intelligence audit
 | **Database & ORM** | Supabase PostgreSQL + Prisma ORM |
 | **Billing & Payments** | Stripe (Subscriptions) + Base Sepolia USDC (Micro-escrow) |
 | **Smart Contracts** | Solidity 0.8.20+, OpenZeppelin, Hardhat, Ethers.js v6 |
-| **AI Intelligence** | Google Gemini 2.5 Flash via `@google/genai` |
+| **AI Intelligence** | Google Gemini 3.5 Flash via `@google/genai` |
 | **Security Telemetry** | NPM Registry API + OSV.dev CVE Database |
 
 ---

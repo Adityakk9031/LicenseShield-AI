@@ -62,7 +62,7 @@ export default function BillingPage() {
 
   const proFeatures = [
     '10,000 scans / month',
-    'Gemini 2.5 Flash AI Engine',
+    'Gemini 3.5 Flash AI Engine',
     'Dedicated API Key',
     'Audit Log History (90d)',
     'Priority Support',

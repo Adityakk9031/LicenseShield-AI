@@ -12,7 +12,7 @@
  *                                structured verdict.
  *
  * Both functions enforce `responseMimeType: "application/json"` with a strict
- * responseSchema so Gemini 2.5 Flash always returns machine-parseable output.
+ * responseSchema so Gemini 3.5 Flash always returns machine-parseable output.
  */
 
 import { GoogleGenAI, Type } from '@google/genai';
@@ -59,7 +59,7 @@ function buildClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      '[geminiScanner] GEMINI_API_KEY is not set. Cannot invoke Gemini 2.5 Flash.'
+      '[geminiScanner] GEMINI_API_KEY is not set. Cannot invoke Gemini 3.5 Flash.'
     );
   }
   return new GoogleGenAI({ apiKey });
@@ -71,7 +71,7 @@ function buildClient(): GoogleGenAI {
  * parseLicenseText
  *
  * Feed a raw or ambiguous license string (e.g. a custom EULA, non-SPDX text,
- * or a compound expression like "MIT OR GPL-3.0") to Gemini 2.5 Flash for
+ * or a compound expression like "MIT OR GPL-3.0") to Gemini 3.5 Flash for
  * semantic analysis against a target project license.
  *
  * @param rawLicenseText   The raw license text or SPDX expression to analyse.
@@ -107,7 +107,7 @@ Your task:
 `.trim();
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.5-flash',
     contents: prompt,
     config: {
       responseMimeType: 'application/json',
@@ -136,7 +136,7 @@ export interface OsvVulnerability {
  * analyzeVulnerabilities
  *
  * Takes a batch of OSV vulnerability objects for a single package and asks
- * Gemini 2.5 Flash to contextualize their combined risk, determine the overall
+ * Gemini 3.5 Flash to contextualize their combined risk, determine the overall
  * severity, and suggest concrete remediation.
  *
  * @param packageName     The affected npm package name.
@@ -188,7 +188,7 @@ Your task:
 `.trim();
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.5-flash',
     contents: prompt,
     config: {
       responseMimeType: 'application/json',
