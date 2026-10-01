@@ -153,10 +153,10 @@ export default function AgentPlayground() {
         <div className="metric-card-tag" style={{ margin: '0 auto 14px' }}>
           CORE AGENT USP · LIVE INTERCEPTOR
         </div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 4.5vw, 54px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(27px, 3.3vw, 40px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.038em', lineHeight: 1.12, textWrap: 'balance' }}>
           AI Coding Agent <span className="hero-heading-gradient">Verification Sandbox</span>
         </h2>
-        <p style={{ fontSize: 'clamp(15px, 1.8vw, 17px)', color: 'rgba(148, 163, 184, 0.85)', maxWidth: 680, margin: '16px auto 0', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 'clamp(14.5px, 1.4vw, 16px)', color: 'rgba(148, 163, 184, 0.9)', maxWidth: 560, margin: '14px auto 0', lineHeight: 1.65 }}>
           Watch LicenseShield act as an autonomous policy proxy in real-time. When AI coding agents generate code with unvetted packages, LicenseShield intercepts, scans, and verifies compliance before code merges.
         </p>
       </div>
@@ -178,11 +178,11 @@ export default function AgentPlayground() {
                   style={{
                     padding: '10px 14px',
                     borderRadius: 12,
-                    background: selectedAgent === agent.name ? 'linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)' : 'rgba(8, 12, 22, 0.7)',
-                    border: `1px solid ${selectedAgent === agent.name ? 'rgba(0, 242, 254, 0.5)' : 'rgba(255, 255, 255, 0.06)'}`,
-                    color: selectedAgent === agent.name ? '#00F2FE' : '#94A3B8',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 12,
+                    background: selectedAgent === agent.name ? 'rgba(99, 102, 241, 0.12)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${selectedAgent === agent.name ? 'rgba(129, 140, 248, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
+                    color: selectedAgent === agent.name ? '#C7D2FE' : '#94A3B8',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 12.5,
                     fontWeight: 600,
                     cursor: 'pointer',
                     display: 'flex',
@@ -212,8 +212,8 @@ export default function AgentPlayground() {
                     style={{
                       padding: '14px 16px',
                       borderRadius: 14,
-                      background: isSelected ? 'rgba(0, 242, 254, 0.08)' : 'rgba(8, 12, 22, 0.6)',
-                      border: `1px solid ${isSelected ? 'rgba(0, 242, 254, 0.4)' : 'rgba(255, 255, 255, 0.06)'}`,
+                      background: isSelected ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                      border: `1px solid ${isSelected ? 'rgba(129, 140, 248, 0.45)' : 'rgba(255, 255, 255, 0.08)'}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -225,13 +225,13 @@ export default function AgentPlayground() {
                       <span
                         style={{
                           fontSize: 10.5,
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
+                          fontFamily: 'var(--font-sans)',
+                          fontWeight: 600,
                           padding: '2px 8px',
                           borderRadius: 6,
-                          background: sc.tagType === 'danger' ? 'rgba(251, 113, 133, 0.15)' : sc.tagType === 'warning' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(52, 211, 153, 0.15)',
-                          color: sc.tagType === 'danger' ? 'var(--rose)' : sc.tagType === 'warning' ? 'var(--amber)' : 'var(--emerald)',
-                          border: `1px solid ${sc.tagType === 'danger' ? 'rgba(251, 113, 133, 0.3)' : sc.tagType === 'warning' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(52, 211, 153, 0.3)'}`,
+                          background: sc.tagType === 'danger' ? 'rgba(251, 113, 133, 0.12)' : sc.tagType === 'warning' ? 'rgba(251, 191, 36, 0.12)' : 'rgba(52, 211, 153, 0.12)',
+                          color: sc.tagType === 'danger' ? '#FDA4AF' : sc.tagType === 'warning' ? '#FCD34D' : '#6EE7B7',
+                          border: `1px solid ${sc.tagType === 'danger' ? 'rgba(251, 113, 133, 0.28)' : sc.tagType === 'warning' ? 'rgba(251, 191, 36, 0.28)' : 'rgba(52, 211, 153, 0.28)'}`,
                         }}
                       >
                         {sc.tag}
@@ -257,9 +257,9 @@ export default function AgentPlayground() {
                   value={targetPolicy}
                   onChange={(e) => setTargetPolicy(e.target.value)}
                   style={{
-                    background: '#04060A',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#00F2FE',
+                    background: '#0A0C14',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#C7D2FE',
                     borderRadius: 8,
                     padding: '3px 8px',
                     fontSize: 11,
@@ -282,12 +282,12 @@ export default function AgentPlayground() {
               style={{
                 width: '100%',
                 background: 'rgba(2, 4, 8, 0.9)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: 12,
                 padding: '12px 14px',
                 fontFamily: 'var(--font-mono)',
                 fontSize: 12.5,
-                color: '#00F2FE',
+                color: '#E2E8F0',
                 outline: 'none',
               }}
             />
@@ -317,13 +317,13 @@ export default function AgentPlayground() {
         {/* Right Column: Live Streaming Terminal & Compliance Card */}
         <div
           style={{
-            background: 'rgba(4, 8, 16, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: 22,
+            background: 'rgba(8, 10, 18, 0.92)',
+            border: '1px solid rgba(255, 255, 255, 0.09)',
+            borderRadius: 20,
             padding: 24,
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            boxShadow: '0 28px 60px -24px rgba(0, 0, 0, 0.8)',
             backdropFilter: 'blur(24px)',
           }}
         >
@@ -340,14 +340,14 @@ export default function AgentPlayground() {
 
             <span
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: 'var(--font-sans)',
                 fontSize: 10.5,
-                fontWeight: 700,
+                fontWeight: 600,
                 padding: '3px 10px',
                 borderRadius: 20,
-                background: 'rgba(0, 242, 254, 0.1)',
-                color: '#00F2FE',
-                border: '1px solid rgba(0, 242, 254, 0.25)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#CBD5E1',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
               }}
             >
               IPC HOOK: ACTIVE
@@ -378,7 +378,7 @@ export default function AgentPlayground() {
               <div
                 key={idx}
                 style={{
-                  color: log.includes('BLOCKED') || log.includes('❌') || log.includes('🚨') ? '#F87171' : log.includes('APPROVED') || log.includes('✅') || log.includes('🎉') ? '#34D399' : log.includes('FLAGGED') || log.includes('⚠️') ? '#FBBF24' : log.includes('INTERCEPT') || log.includes('⚡') ? '#00F2FE' : '#94A3B8',
+                  color: log.includes('BLOCKED') || log.includes('❌') || log.includes('🚨') ? '#F87171' : log.includes('APPROVED') || log.includes('✅') || log.includes('🎉') ? '#34D399' : log.includes('FLAGGED') || log.includes('⚠️') ? '#FBBF24' : log.includes('INTERCEPT') || log.includes('⚡') ? '#A5B4FC' : '#94A3B8',
                 }}
               >
                 {log}
@@ -401,13 +401,13 @@ export default function AgentPlayground() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span
                     style={{
-                      fontFamily: 'var(--font-mono)',
+                      fontFamily: 'var(--font-sans)',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       padding: '4px 10px',
                       borderRadius: 8,
-                      background: verificationResult.status === 'FAIL' ? 'rgba(251, 113, 133, 0.2)' : verificationResult.status === 'WARN' ? 'rgba(251, 191, 36, 0.2)' : 'rgba(52, 211, 153, 0.2)',
-                      color: verificationResult.status === 'FAIL' ? 'var(--rose)' : verificationResult.status === 'WARN' ? 'var(--amber)' : 'var(--emerald)',
+                      background: verificationResult.status === 'FAIL' ? 'rgba(251, 113, 133, 0.16)' : verificationResult.status === 'WARN' ? 'rgba(251, 191, 36, 0.16)' : 'rgba(52, 211, 153, 0.16)',
+                      color: verificationResult.status === 'FAIL' ? '#FDA4AF' : verificationResult.status === 'WARN' ? '#FCD34D' : '#6EE7B7',
                     }}
                   >
                     VERDICT: {verificationResult.status}
@@ -427,7 +427,7 @@ export default function AgentPlayground() {
               </p>
 
               {verificationResult.recommendation && (
-                <div style={{ fontSize: 11.5, fontFamily: 'var(--font-mono)', color: 'var(--cyan)', background: 'rgba(0, 242, 254, 0.06)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(0, 242, 254, 0.15)' }}>
+                <div style={{ fontSize: 11.5, fontFamily: 'var(--font-mono)', color: '#A5B4FC', background: 'rgba(99, 102, 241, 0.07)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(129, 140, 248, 0.2)' }}>
                   💡 Fix: {verificationResult.recommendation}
                 </div>
               )}

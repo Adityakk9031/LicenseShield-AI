@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card';
 
 const CheckIcon = () => (
   <svg
@@ -102,15 +103,21 @@ export default function BillingPage() {
         <div className="billing-grid">
 
           {/* FREE CARD */}
-          <div className="billing-card">
+          <CardContainer containerClassName="py-0 w-full h-full" className="w-full h-full">
+          <CardBody className="billing-card w-full h-auto flex flex-col justify-between" style={{ height: 'auto' }}>
             <div className="billing-card-inner">
+              <CardItem translateZ={30} className="w-full">
               <p className="billing-tier-name">Free</p>
+              </CardItem>
+              <CardItem translateZ={80} className="w-full">
               <div className="billing-price">
                 <span className="billing-price-amount">$0</span>
                 <span className="billing-price-period">/month</span>
               </div>
+              </CardItem>
               <p className="billing-description">100 scans per month</p>
               <hr className="billing-divider" />
+              <CardItem translateZ={20} className="w-full">
               <ul className="billing-features">
                 {freeFeatures.map((feat) => (
                   <li key={feat} className="billing-feature">
@@ -121,7 +128,9 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
+              </CardItem>
             </div>
+            <CardItem translateZ={40} className="w-full">
             <a
               href="/dashboard"
               className="btn-ghost billing-cta"
@@ -129,19 +138,27 @@ export default function BillingPage() {
             >
               Current Plan
             </a>
-          </div>
+            </CardItem>
+          </CardBody>
+          </CardContainer>
 
           {/* PRO CARD */}
-          <div className="billing-card featured">
+          <CardContainer containerClassName="py-0 w-full h-full" className="w-full h-full">
+          <CardBody className="billing-card featured w-full h-auto flex flex-col justify-between" style={{ height: 'auto' }}>
             <div className="billing-popular-badge">Most Popular</div>
             <div className="billing-card-inner">
+              <CardItem translateZ={30} className="w-full">
               <p className="billing-tier-name">Pro</p>
+              </CardItem>
+              <CardItem translateZ={80} className="w-full">
               <div className="billing-price">
                 <span className="billing-price-amount">$29</span>
                 <span className="billing-price-period">/month</span>
               </div>
+              </CardItem>
               <p className="billing-description">Everything you need to ship fast</p>
               <hr className="billing-divider" />
+              <CardItem translateZ={20} className="w-full">
               <ul className="billing-features">
                 {proFeatures.map((feat) => (
                   <li key={feat} className="billing-feature">
@@ -152,7 +169,9 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
+              </CardItem>
             </div>
+            <CardItem translateZ={40} className="w-full">
             <button
               className="btn-brand billing-cta"
               style={{ width: '100%' }}
@@ -163,18 +182,26 @@ export default function BillingPage() {
                 ? 'Redirecting...'
                 : 'Upgrade to Pro'}
             </button>
-          </div>
+            </CardItem>
+          </CardBody>
+          </CardContainer>
 
           {/* ENTERPRISE CARD */}
-          <div className="billing-card">
+          <CardContainer containerClassName="py-0 w-full h-full" className="w-full h-full">
+          <CardBody className="billing-card w-full h-auto flex flex-col justify-between" style={{ height: 'auto' }}>
             <div className="billing-card-inner">
+              <CardItem translateZ={30} className="w-full">
               <p className="billing-tier-name">Enterprise</p>
+              </CardItem>
+              <CardItem translateZ={80} className="w-full">
               <div className="billing-price">
                 <span className="billing-price-amount">$199</span>
                 <span className="billing-price-period">/month</span>
               </div>
+              </CardItem>
               <p className="billing-description">For teams with custom compliance needs</p>
               <hr className="billing-divider" />
+              <CardItem translateZ={20} className="w-full">
               <ul className="billing-features">
                 {enterpriseFeatures.map((feat) => (
                   <li key={feat} className="billing-feature">
@@ -185,7 +212,9 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
+              </CardItem>
             </div>
+            <CardItem translateZ={40} className="w-full">
             <button
               className="btn-emerald billing-cta"
               style={{ width: '100%' }}
@@ -196,7 +225,9 @@ export default function BillingPage() {
                 ? 'Redirecting...'
                 : 'Upgrade to Enterprise'}
             </button>
-          </div>
+            </CardItem>
+          </CardBody>
+          </CardContainer>
 
         </div>
 

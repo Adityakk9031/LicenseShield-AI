@@ -24,15 +24,15 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
           height: current.box,
           borderRadius: size === 'lg' ? 14 : 11,
           background: 'linear-gradient(135deg, rgba(8, 16, 32, 0.95) 0%, rgba(2, 6, 14, 0.98) 100%)',
-          border: '1px solid rgba(0, 242, 254, 0.35)',
+          border: '1px solid rgba(129, 140, 248, 0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          boxShadow: '0 0 20px rgba(0, 242, 254, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 -2px 6px rgba(0, 242, 254, 0.2)',
+          boxShadow: '0 8px 24px -8px rgba(99, 102, 241, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.18)',
           transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
-        className="group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(0,242,254,0.45)] group-hover:border-[rgba(0,242,254,0.7)]"
+        className="group-hover:scale-105 group-hover:shadow-[0_12px_32px_-8px_rgba(99,102,241,0.65)] group-hover:border-[rgba(129,140,248,0.6)]"
       >
         {/* Ambient Backlight Glow */}
         <div
@@ -40,7 +40,7 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
             position: 'absolute',
             inset: 2,
             borderRadius: size === 'lg' ? 12 : 9,
-            background: 'radial-gradient(circle at 50% 35%, rgba(0, 242, 254, 0.3) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 80%)',
+            background: 'radial-gradient(circle at 50% 35%, rgba(129, 140, 248, 0.25) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 80%)',
             pointerEvents: 'none',
           }}
         />
@@ -52,14 +52,14 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
           viewBox="0 0 32 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          style={{ position: 'relative', zIndex: 2, filter: 'drop-shadow(0 2px 8px rgba(0, 242, 254, 0.4))' }}
+          style={{ position: 'relative', zIndex: 2, filter: 'drop-shadow(0 2px 8px rgba(99, 102, 241, 0.45))' }}
         >
           <defs>
             {/* Left Facet Gradient */}
             <linearGradient id="shieldLeft" x1="4" y1="4" x2="16" y2="28" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#00F2FE" />
-              <stop offset="50%" stopColor="#0284C7" />
-              <stop offset="100%" stopColor="#0369A1" />
+              <stop offset="0%" stopColor="#818CF8" />
+              <stop offset="50%" stopColor="#4F46E5" />
+              <stop offset="100%" stopColor="#3730A3" />
             </linearGradient>
 
             {/* Right Facet Gradient */}
@@ -72,14 +72,14 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
             {/* Central AI Quantum Core Gradient */}
             <linearGradient id="aiCore" x1="10" y1="9" x2="22" y2="21" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="35%" stopColor="#00F2FE" />
+              <stop offset="35%" stopColor="#A5B4FC" />
               <stop offset="100%" stopColor="#818CF8" />
             </linearGradient>
 
             {/* Specular Edge Highlight */}
             <linearGradient id="edgeGlow" x1="16" y1="2" x2="16" y2="28" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-              <stop offset="40%" stopColor="#00F2FE" stopOpacity="0.4" />
+              <stop offset="40%" stopColor="#A5B4FC" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
             </linearGradient>
 
@@ -140,7 +140,7 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
           {/* Circuit Trace Connectors */}
           <path
             d="M16 19.5V24.5M11 14.5H7.5M21 14.5H24.5M16 9.5V6"
-            stroke="#00F2FE"
+            stroke="#A5B4FC"
             strokeWidth="1"
             strokeLinecap="round"
             opacity="0.8"
@@ -161,7 +161,7 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
               lineHeight: 1,
             }}
           >
-            License<span style={{ background: 'linear-gradient(135deg, #00F2FE 0%, #818CF8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Shield</span>
+            License<span style={{ color: '#A5B4FC' }}>Shield</span>
           </span>
 
           {/* High-Tech AI Badge */}
@@ -173,10 +173,9 @@ export default function BrandLogo({ size = 'md', showText = true, className = ''
               letterSpacing: '0.04em',
               padding: '2px 6px',
               borderRadius: '5px',
-              background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)',
-              border: '1px solid rgba(0, 242, 254, 0.3)',
-              color: '#00F2FE',
-              boxShadow: '0 0 10px rgba(0, 242, 254, 0.2)',
+              background: 'rgba(129, 140, 248, 0.12)',
+              border: '1px solid rgba(129, 140, 248, 0.3)',
+              color: '#C7D2FE',
               lineHeight: 1,
             }}
           >

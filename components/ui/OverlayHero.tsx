@@ -40,7 +40,7 @@ export default function OverlayHero({
 
       {/* Main Title with USP */}
       <h1 className="hero-heading">
-        Real-Time Guardrails for <br />
+        Real-Time Guardrails for{' '}
         <span className="hero-heading-gradient">Autonomous AI Coding Agents</span>
       </h1>
 
@@ -68,7 +68,7 @@ export default function OverlayHero({
         </button>
 
         <button onClick={onOpenKeyModal} className="btn-secondary-glass" type="button">
-          <span style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>#</span>
+          <span style={{ color: '#A5B4FC', fontFamily: 'var(--font-mono)' }}>#</span>
           <span>Generate Live API Key</span>
         </button>
       </div>
@@ -76,20 +76,20 @@ export default function OverlayHero({
       {/* Mini Feature Badges Row */}
       <div className="hero-pills-row">
         <div className="hero-feature-chip">
-          <span style={{ color: '#00F2FE' }}>⚡</span>
+          <span style={{ color: '#A5B4FC' }}>⚡</span>
           <span>&lt;50ms Intercept</span>
         </div>
         <div className="hero-feature-chip">
-          <span style={{ color: '#10B981' }}>🛡️</span>
+          <span style={{ color: '#A5B4FC' }}>🛡️</span>
           <span>OSV.dev + NPM Synced</span>
         </div>
         <div className="hero-feature-chip">
-          <span style={{ color: '#818CF8' }}>🤖</span>
+          <span style={{ color: '#A5B4FC' }}>🤖</span>
           <span>Cursor / Claude / Gemini Guardrails</span>
         </div>
         <div className="hero-feature-chip">
-          <span style={{ color: '#F59E0B' }}>⛓️</span>
-          <span>Base Sepolia $0.001 Escrow</span>
+          <span style={{ color: '#A5B4FC' }}>⛓️</span>
+          <span>Base Sepolia Escrow</span>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import LicenseShieldScrubber from '@/components/LicenseShieldScrubber';
+import RisoDither from '@/components/ui/RisoDither';
 import OverlayHero from '@/components/ui/OverlayHero';
 import AgentPlayground from '@/components/AgentPlayground';
 import OverlayMetrics from '@/components/ui/OverlayMetrics';
@@ -40,6 +41,22 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-transparent text-white">
+      {/* Riso Dither flow-field — hero backdrop, dissolves into the scrub animation */}
+      <RisoDither
+        palette={['#070614', '#1E1B4E', '#4A3FB8', '#7C6FE8', '#B7A6F4', '#E8A0C8']}
+        bg="#050410"
+        bgAlpha={1}
+        speed={0.24}
+        pixelSize={6}
+        levels={6}
+        scale={1.15}
+        contrast={1.9}
+        flowAngle={32}
+        detail={0.3}
+        glow={0.32}
+        matrix={8}
+      />
+
       {/* Top Fixed Navbar with Supabase Auth session & Sign In/Sign Up */}
       <Navbar onOpenAuth={(tab) => openAuth(tab || 'signin')} />
 

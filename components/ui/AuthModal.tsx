@@ -96,8 +96,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'apikey' }: Au
               fontFamily: 'var(--font-mono)',
               fontWeight: 700,
               cursor: 'pointer',
-              background: tab === 'apikey' ? 'linear-gradient(135deg, #00E5F0 0%, #818CF8 100%)' : 'transparent',
-              color: tab === 'apikey' ? '#020408' : '#94A3B8',
+              background: tab === 'apikey' ? '#6366F1' : 'transparent',
+              color: tab === 'apikey' ? '#FFFFFF' : '#94A3B8',
               transition: 'all 0.18s ease',
             }}
           >
@@ -115,8 +115,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'apikey' }: Au
               fontFamily: 'var(--font-mono)',
               fontWeight: 700,
               cursor: 'pointer',
-              background: tab === 'web3' ? 'linear-gradient(135deg, #10B981 0%, #00E5F0 100%)' : 'transparent',
-              color: tab === 'web3' ? '#020408' : '#94A3B8',
+              background: tab === 'web3' ? '#6366F1' : 'transparent',
+              color: tab === 'web3' ? '#FFFFFF' : '#94A3B8',
               transition: 'all 0.18s ease',
             }}
           >
@@ -201,7 +201,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'apikey' }: Au
                 <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>NETWORK: BASE SEPOLIA (84532)</span>
                 <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--emerald)', fontWeight: 700 }}>● LIVE ESCROW</span>
               </div>
-              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: '#00F2FE', wordBreak: 'break-all' }}>
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: '#A5B4FC', wordBreak: 'break-all' }}>
                 0x036CbD53842c5426634e7929541eC2318f3dCF7e
               </div>
             </div>

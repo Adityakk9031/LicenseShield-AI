@@ -118,11 +118,11 @@ export default function Footer() {
               style={{
                 padding: '5px 14px',
                 borderRadius: 24,
-                background: 'rgba(16, 185, 129, 0.08)',
-                color: '#10B981',
+                background: 'rgba(16, 185, 129, 0.07)',
+                color: '#34D399',
                 fontSize: 11.5,
                 fontFamily: 'var(--font-mono)',
-                border: '1px solid rgba(16, 185, 129, 0.2)',
+                border: '1px solid rgba(16, 185, 129, 0.18)',
                 fontWeight: 600,
               }}
             >
@@ -132,11 +132,11 @@ export default function Footer() {
               style={{
                 padding: '5px 14px',
                 borderRadius: 24,
-                background: 'rgba(0, 242, 254, 0.06)',
-                color: '#00F2FE',
+                background: 'rgba(99, 102, 241, 0.08)',
+                color: '#A5B4FC',
                 fontSize: 11.5,
                 fontFamily: 'var(--font-mono)',
-                border: '1px solid rgba(0, 242, 254, 0.18)',
+                border: '1px solid rgba(129, 140, 248, 0.22)',
                 fontWeight: 600,
               }}
             >

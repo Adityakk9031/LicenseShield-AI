@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card';
 
 export default function OverlayMetrics() {
   const [copiedContract, setCopiedContract] = useState(false);
@@ -23,23 +24,31 @@ export default function OverlayMetrics() {
     <section className="metrics-section">
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <span className="metric-card-tag">REAL-TIME TELEMETRY</span>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4.5vw, 44px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', marginTop: 8 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3.2vw, 38px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.035em', marginTop: 8, textWrap: 'balance' }}>
           Autonomous Compliance Metrics
         </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: 15.5, maxWidth: 580, margin: '10px auto 0', lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 15, maxWidth: 520, margin: '12px auto 0', lineHeight: 1.65 }}>
           High-throughput vulnerability analysis and multi-license graph verification running across distributed nodes.
         </p>
       </div>
 
-      {/* 4 Metrics Cards */}
+      {/* 4 Metrics Cards — 3D tilt on hover */}
       <div className="metrics-grid">
         {metrics.map((m) => (
-          <div key={m.label} className="metric-card">
-            <span className="metric-card-tag">{m.tag}</span>
-            <div className="metric-card-val">{m.value}</div>
-            <div className="metric-card-label">{m.label}</div>
-            <div className="metric-card-desc">{m.desc}</div>
-          </div>
+          <CardContainer key={m.label} containerClassName="py-0 w-full h-full" className="w-full h-full">
+            <CardBody className="metric-card w-full h-auto">
+              <CardItem translateZ={30} className="w-full">
+                <span className="metric-card-tag">{m.tag}</span>
+              </CardItem>
+              <CardItem translateZ={70} className="w-full">
+                <div className="metric-card-val">{m.value}</div>
+              </CardItem>
+              <CardItem translateZ={35} className="w-full">
+                <div className="metric-card-label">{m.label}</div>
+                <div className="metric-card-desc">{m.desc}</div>
+              </CardItem>
+            </CardBody>
+          </CardContainer>
         ))}
       </div>
 
@@ -53,8 +62,8 @@ export default function OverlayMetrics() {
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: 16,
-          background: 'rgba(16, 185, 129, 0.05)',
-          borderColor: 'rgba(16, 185, 129, 0.25)',
+          background: 'rgba(16, 185, 129, 0.04)',
+          borderColor: 'rgba(16, 185, 129, 0.22)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
