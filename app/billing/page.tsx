@@ -217,11 +217,9 @@ export default function BillingPage() {
       <style>{`
         .billing-page {
           min-height: 100vh;
-          background: radial-gradient(ellipse 80% 60% at 50% -10%,
-              rgba(99, 102, 241, 0.18) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 80% 80%,
-              rgba(16, 185, 129, 0.10) 0%, transparent 55%),
-            #0a0a0f;
+          background:
+            radial-gradient(ellipse 70% 50% at 50% -10%, rgba(99, 102, 241, 0.07) 0%, transparent 60%),
+            #F2F4FC;
           padding: 80px 24px 100px;
           display: flex;
           justify-content: center;
@@ -253,9 +251,9 @@ export default function BillingPage() {
           font-weight: 600;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: #a5b4fc;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.25);
+          color: #6D28D9;
+          background: rgba(109, 40, 217, 0.06);
+          border: 1px solid rgba(109, 40, 217, 0.2);
           padding: 6px 14px;
           border-radius: 999px;
         }
@@ -266,16 +264,13 @@ export default function BillingPage() {
           font-weight: 800;
           letter-spacing: -0.03em;
           line-height: 1.1;
-          background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #0F172A;
         }
 
         .billing-subtitle {
           margin: 0;
           font-size: 1rem;
-          color: #64748b;
+          color: #64748B;
           line-height: 1.7;
         }
 
@@ -297,37 +292,33 @@ export default function BillingPage() {
 
         .billing-card {
           position: relative;
-          background: rgba(15, 15, 25, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.07);
+          background: #FFFFFF;
+          border: 1px solid #E9ECF7;
           border-radius: 20px;
           padding: 32px 28px 28px;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
           display: flex;
           flex-direction: column;
           gap: 24px;
-          transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 32px rgba(99, 102, 241, 0.06);
+          transition: border-color 0.25s ease, transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         .billing-card:hover {
-          border-color: rgba(99, 102, 241, 0.28);
+          border-color: rgba(99, 102, 241, 0.35);
           transform: translateY(-4px);
-          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.12);
+          box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 44px rgba(99, 102, 241, 0.13);
         }
 
         .billing-card.featured {
-          background: rgba(20, 18, 48, 0.75);
-          border-color: rgba(99, 102, 241, 0.4);
-          box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.18), 0 20px 60px rgba(99, 102, 241, 0.14),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          border-color: rgba(99, 102, 241, 0.45);
+          box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 56px rgba(99, 102, 241, 0.16);
           transform: scale(1.03);
           z-index: 1;
         }
 
         .billing-card.featured:hover {
           transform: scale(1.03) translateY(-4px);
-          box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35), 0 28px 70px rgba(99, 102, 241, 0.22),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          box-shadow: 0 4px 8px rgba(15, 23, 42, 0.06), 0 28px 68px rgba(99, 102, 241, 0.22);
         }
 
         .billing-popular-badge {
@@ -335,7 +326,7 @@ export default function BillingPage() {
           top: -14px;
           left: 50%;
           transform: translateX(-50%);
-          background: linear-gradient(135deg, #6366f1, #818cf8);
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
           color: #fff;
           font-size: 11px;
           font-weight: 700;
@@ -344,7 +335,7 @@ export default function BillingPage() {
           padding: 5px 16px;
           border-radius: 999px;
           white-space: nowrap;
-          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
         }
 
         .billing-card-inner {
@@ -360,11 +351,11 @@ export default function BillingPage() {
           font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #94a3b8;
+          color: #64748B;
         }
 
         .billing-card.featured .billing-tier-name {
-          color: #a5b4fc;
+          color: #6D28D9;
         }
 
         .billing-price {
@@ -378,35 +369,28 @@ export default function BillingPage() {
           font-size: 2.75rem;
           font-weight: 800;
           letter-spacing: -0.04em;
-          color: #f8fafc;
+          color: #0F172A;
           line-height: 1;
+          font-variant-numeric: tabular-nums;
         }
 
         .billing-price-period {
           font-size: 0.875rem;
-          color: #475569;
+          color: #94A3B8;
           font-weight: 500;
         }
 
         .billing-description {
           margin: 0;
           font-size: 0.875rem;
-          color: #64748b;
+          color: #64748B;
           line-height: 1.5;
-        }
-
-        .billing-card.featured .billing-description {
-          color: #94a3b8;
         }
 
         .billing-divider {
           border: none;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid #EEF1F9;
           margin: 4px 0;
-        }
-
-        .billing-card.featured .billing-divider {
-          border-top-color: rgba(99, 102, 241, 0.2);
         }
 
         .billing-features {
@@ -423,12 +407,8 @@ export default function BillingPage() {
           align-items: center;
           gap: 10px;
           font-size: 0.875rem;
-          color: #94a3b8;
+          color: #334155;
           line-height: 1.4;
-        }
-
-        .billing-card.featured .billing-feature {
-          color: #cbd5e1;
         }
 
         .billing-feature-check {
@@ -437,17 +417,17 @@ export default function BillingPage() {
           height: 20px;
           border-radius: 6px;
           background: rgba(99, 102, 241, 0.08);
-          border: 1px solid rgba(99, 102, 241, 0.18);
+          border: 1px solid rgba(99, 102, 241, 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #6366f1;
+          color: #6366F1;
         }
 
         .billing-feature-check.featured-check {
-          background: rgba(99, 102, 241, 0.15);
-          border-color: rgba(99, 102, 241, 0.35);
-          color: #a5b4fc;
+          background: linear-gradient(135deg, #6366F1, #8B5CF6);
+          border-color: transparent;
+          color: #FFFFFF;
         }
 
         .billing-cta {
@@ -463,26 +443,26 @@ export default function BillingPage() {
         }
 
         .billing-cta.btn-ghost {
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #64748b;
+          background: #F8FAFF;
+          border: 1px solid #DDE2F0;
+          color: #64748B;
         }
 
         .billing-cta.btn-ghost:hover {
-          background: rgba(255, 255, 255, 0.07);
-          color: #94a3b8;
-          border-color: rgba(255, 255, 255, 0.15);
+          background: #F1F4FC;
+          color: #475569;
+          border-color: #C7CFE6;
         }
 
         .billing-cta.btn-brand {
-          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
           color: #fff;
-          box-shadow: 0 6px 24px rgba(99, 102, 241, 0.38);
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
         }
 
         .billing-cta.btn-brand:hover:not(:disabled) {
-          background: linear-gradient(135deg, #4f52e8 0%, #6d77f5 100%);
-          box-shadow: 0 10px 32px rgba(99, 102, 241, 0.5);
+          background: linear-gradient(135deg, #4f52e8 0%, #7c4df0 100%);
+          box-shadow: 0 10px 28px rgba(99, 102, 241, 0.4);
           transform: translateY(-1px);
         }
 
@@ -492,16 +472,15 @@ export default function BillingPage() {
         }
 
         .billing-cta.btn-emerald {
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.3);
-          color: #10b981;
-          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+          background: rgba(5, 150, 105, 0.06);
+          border: 1px solid rgba(5, 150, 105, 0.3);
+          color: #059669;
         }
 
         .billing-cta.btn-emerald:hover:not(:disabled) {
-          background: rgba(16, 185, 129, 0.18);
-          border-color: rgba(16, 185, 129, 0.5);
-          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.18);
+          background: rgba(5, 150, 105, 0.12);
+          border-color: rgba(5, 150, 105, 0.5);
+          box-shadow: 0 8px 24px rgba(5, 150, 105, 0.15);
           transform: translateY(-1px);
         }
 
@@ -523,7 +502,7 @@ export default function BillingPage() {
           font-weight: 600;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #475569;
+          color: #94A3B8;
         }
 
         .billing-global-badges {
@@ -536,9 +515,9 @@ export default function BillingPage() {
         .billing-global-chip {
           font-size: 12px;
           font-weight: 500;
-          color: #64748b;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #64748B;
+          background: #FFFFFF;
+          border: 1px solid #E9ECF7;
           padding: 6px 14px;
           border-radius: 999px;
           letter-spacing: 0.01em;
@@ -546,9 +525,9 @@ export default function BillingPage() {
         }
 
         .billing-global-chip:hover {
-          color: #94a3b8;
-          border-color: rgba(99, 102, 241, 0.2);
-          background: rgba(99, 102, 241, 0.05);
+          color: #6D28D9;
+          border-color: rgba(109, 40, 217, 0.3);
+          background: rgba(109, 40, 217, 0.04);
         }
       `}</style>
     </div>

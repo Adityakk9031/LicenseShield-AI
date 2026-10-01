@@ -67,14 +67,15 @@ export default function AuditLogsPage() {
       {/* Filters */}
       <div
         style={{
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid var(--border-subtle)',
+          background: '#FFFFFF',
+          border: '1px solid #E9ECF7',
           borderRadius: 'var(--radius-xl)',
           padding: 20,
           display: 'flex',
           gap: 12,
           flexWrap: 'wrap',
           alignItems: 'center',
+          boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 10px 32px rgba(99,102,241,0.06)',
         }}
       >
         <input
@@ -206,7 +207,7 @@ export default function AuditLogsPage() {
                           onClick={() => setSelectedLog(selectedLog?.id === log.id ? null : log)}
                           style={{
                             padding: '5px 12px',
-                            background: selectedLog?.id === log.id ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)',
+                            background: selectedLog?.id === log.id ? 'rgba(109,40,217,0.1)' : '#F8FAFF',
                             border: selectedLog?.id === log.id ? '1px solid rgba(124,58,237,0.4)' : '1px solid var(--border-subtle)',
                             color: selectedLog?.id === log.id ? 'var(--violet-light)' : 'var(--n-500)',
                             borderRadius: 8,
@@ -233,10 +234,11 @@ export default function AuditLogsPage() {
       {selectedLog && (
         <div
           style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid var(--border-default)',
+            background: '#FFFFFF',
+            border: '1px solid #E9ECF7',
             borderRadius: 'var(--radius-xl)',
             padding: 28,
+            boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 10px 32px rgba(99,102,241,0.06)',
             animation: 'scale-in 0.2s ease forwards',
           }}
         >
@@ -264,7 +266,7 @@ export default function AuditLogsPage() {
               { label: 'Payment Channel', value: selectedLog.billedVia === 'BASE_SEPOLIA_USDC' ? '⚡ Base Sepolia USDC' : '💳 Stripe' },
               { label: 'Scan Date', value: new Date(selectedLog.createdAt).toLocaleString() },
             ].map(({ label, value }) => (
-              <div key={label} style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.025)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <div key={label} style={{ padding: '12px 16px', background: '#F8FAFF', borderRadius: 'var(--radius-md)', border: '1px solid #E9ECF7' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--n-700)', marginBottom: 6 }}>{label}</div>
                 <div style={{ fontSize: 13, color: 'var(--n-300)', fontFamily: 'var(--font-mono)' }}>{value}</div>
               </div>

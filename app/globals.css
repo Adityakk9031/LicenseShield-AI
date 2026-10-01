@@ -1249,3 +1249,364 @@ body {
   font-size: 13px;
   color: var(--n-400);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   DASHBOARD LIGHT THEME — "Spruha-inspired" premium light redesign
+   Scoped entirely under .dash-layout so the marketing site keeps
+   its dark Obsidian identity. Text/surface CSS variables are remapped
+   inside the shell, which flips every inline var() reference on the
+   dashboard pages to light-mode values automatically.
+═════════════════════════════════════════════════════════════════ */
+
+.dash-layout {
+  /* Variable remap: what was "light text on dark" becomes "ink on light" */
+  --white: #0F172A;
+  --violet-light: #6D28D9;
+  --emerald-light: #059669;
+  --emerald: #059669;
+  --cyan: #6D28D9;
+  --n-300: #475569;
+  --n-400: #475569;
+  --n-500: #64748B;
+  --n-600: #64748B;
+  --n-700: #94A3B8;
+  --border-subtle: #E2E8F0;
+  --border-default: #CBD5E1;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FBFCFF;
+
+  background-color: #F2F4FC;
+  color: #0F172A;
+}
+
+/* ── Shell & Sidebar: deep navy, machined feel ─────────────────── */
+.dash-layout .dash-sidebar {
+  background: linear-gradient(180deg, #101B36 0%, #0B1226 100%);
+  border-right: none;
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+.dash-layout .dash-sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dash-layout .dash-nav-section-label {
+  color: #64748B;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.dash-layout .dash-nav-item {
+  color: #94A3B8;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.dash-layout .dash-nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+}
+
+.dash-layout .dash-nav-item.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(139, 92, 246, 0.16));
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  color: #C7D2FE;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
+}
+
+.dash-layout .dash-nav-active-bar {
+  background: #818CF8;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.9);
+}
+
+/* ── Main area & topbar: white on light lavender-gray ──────────── */
+.dash-layout .dash-main {
+  background: #F2F4FC;
+}
+
+.dash-layout .dash-topbar {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E6E9F4;
+  backdrop-filter: none;
+}
+
+.dash-layout .dash-breadcrumb-current { color: #0F172A; }
+.dash-layout .dash-breadcrumb-root { color: #64748B; }
+
+.dash-layout .dash-api-badge {
+  background: rgba(5, 150, 105, 0.07);
+  border-color: rgba(5, 150, 105, 0.22);
+  color: #059669;
+}
+
+.dash-layout .dash-content {
+  padding: 36px 40px 72px;
+}
+
+/* ── Stat cards: white, soft tinted shadow, gentle lift ────────── */
+.dash-layout .dash-stat-card {
+  background: #FFFFFF;
+  border: 1px solid #E9ECF7;
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 32px rgba(99, 102, 241, 0.06);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.2s ease;
+}
+
+.dash-layout .dash-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 44px rgba(99, 102, 241, 0.13);
+}
+
+.dash-layout .dash-stat-label {
+  color: #64748B;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.dash-layout .dash-stat-value {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.dash-layout .dash-stat-sub {
+  color: #64748B;
+}
+
+.dash-layout .plan-tag {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.dash-layout .plan-tag.pro {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+}
+
+.dash-layout .progress-bar-wrap {
+  background: #E9ECF7;
+}
+
+.dash-layout .progress-bar-fill {
+  background: linear-gradient(90deg, #6366F1 0%, #8B5CF6 100%);
+}
+
+/* ── Quick actions ─────────────────────────────────────────────── */
+.dash-layout .quick-action-card {
+  background: #FFFFFF;
+  border: 1px solid #E9ECF7;
+  border-radius: 16px;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.2s ease, box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.dash-layout .quick-action-card:hover {
+  background: #FFFFFF;
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.1);
+}
+
+.dash-layout .quick-action-icon {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08));
+  border-radius: 12px;
+}
+
+.dash-layout .quick-action-arrow {
+  color: #94A3B8;
+}
+
+.dash-layout .quick-action-card:hover .quick-action-arrow {
+  transform: translateX(3px);
+  color: #6D28D9;
+}
+
+.dash-layout .quick-action-title {
+  color: #0F172A;
+}
+
+.dash-layout .quick-action-sub {
+  color: #64748B;
+}
+
+/* ── Tables ────────────────────────────────────────────────────── */
+.dash-layout .dash-table-wrap {
+  background: #FFFFFF;
+  border: 1px solid #E9ECF7;
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 32px rgba(99, 102, 241, 0.06);
+  overflow: hidden;
+}
+
+.dash-layout .dash-table-header {
+  border-bottom: 1px solid #EEF1F9;
+}
+
+.dash-layout .dash-table-title {
+  color: #0F172A;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.dash-layout .dash-table-link {
+  color: #6D28D9;
+}
+
+.dash-layout .dash-table th {
+  background: #F8FAFF;
+  color: #64748B;
+  border-bottom: 1px solid #EEF1F9;
+}
+
+.dash-layout .dash-table td {
+  color: #334155;
+  border-bottom: 1px solid #F3F5FB;
+}
+
+.dash-layout .dash-table tr:hover td {
+  background: #F8FAFF;
+}
+
+.dash-layout .table-empty {
+  color: #94A3B8;
+}
+
+/* ── Misc dashboard-scoped pieces ──────────────────────────────── */
+.dash-layout .section-eyebrow {
+  color: #64748B;
+}
+
+.dash-layout .loading-panel {
+  background: transparent;
+}
+
+.dash-layout .loading-text {
+  color: #64748B;
+}
+
+.dash-layout .btn-ghost {
+  color: #6D28D9;
+  background: rgba(109, 40, 217, 0.06);
+  border: 1px solid rgba(109, 40, 217, 0.22);
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.dash-layout .btn-ghost:hover {
+  background: rgba(109, 40, 217, 0.12);
+  border-color: rgba(109, 40, 217, 0.4);
+}
+
+/* ── Billing page (uses billing-* classes) ─────────────────────── */
+.dash-layout .billing-card {
+  background: #FFFFFF;
+  border: 1px solid #E9ECF7;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 32px rgba(99, 102, 241, 0.06);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.dash-layout .billing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 44px rgba(99, 102, 241, 0.12);
+}
+
+.dash-layout .billing-title {
+  color: #0F172A;
+}
+
+.dash-layout .billing-description {
+  color: #64748B;
+}
+
+.dash-layout .billing-tier-name {
+  color: #6D28D9;
+}
+
+.dash-layout .billing-price-amount {
+  color: #0F172A;
+}
+
+.dash-layout .billing-price-period {
+  color: #94A3B8;
+}
+
+.dash-layout .billing-feature {
+  color: #334155;
+}
+
+.dash-layout .billing-divider {
+  border-color: #EEF1F9;
+}
+
+.dash-layout .billing-badge {
+  background: #FFFFFF;
+  border: 1px solid #E9ECF7;
+  color: #475569;
+}
+
+/* ── Light theme: keys page + form controls (dashboard-scoped) ── */
+.dash-layout .key-display {
+  background: #F8FAFF;
+  border: 1px solid rgba(5, 150, 105, 0.35);
+  color: #065F46;
+}
+
+.dash-layout .field-input,
+.dash-layout .field-select {
+  background: #FFFFFF;
+  border: 1px solid #DDE2F0;
+  color: #0F172A;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-layout .field-input:focus,
+.dash-layout .field-select:focus {
+  border-color: #818CF8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  outline: none;
+}
+
+.dash-layout .field-input::placeholder {
+  color: #94A3B8;
+}
+
+.dash-layout .btn-brand {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.2s ease;
+}
+
+.dash-layout .btn-brand:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.35);
+}
+
+.dash-layout .btn-brand:active {
+  transform: scale(0.98);
+}
+
+.dash-layout .btn-emerald {
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
+  transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.2s ease;
+}
+
+.dash-layout .btn-emerald:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(5, 150, 105, 0.3);
+}
+
+.dash-layout .spinner-white {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #FFFFFF;
+}
