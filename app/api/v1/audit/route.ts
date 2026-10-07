@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { checkLicenseCompatibility } from '@/lib/license-engine';
 import { verifyApiKey, verifyEscrowLock, settleEscrowPayment, saveAuditLog } from '@/lib/payment';
+import { withTimeout, EXTERNAL_FETCH_TIMEOUT_MS, GEMINI_TIMEOUT_MS } from '@/lib/timeout';
 
 export async function POST(req: Request) {
   try {
@@ -99,15 +100,26 @@ export async function POST(req: Request) {
         }
 
         const [npmRes, osvRes] = await Promise.allSettled([
-          fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`),
-          fetch('https://api.osv.dev/v1/query', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              package: { name: packageName, ecosystem: 'npm' },
-              ...(packageVersion ? { version: packageVersion } : {}),
+          // Individually timeout-guarded: a stalled registry or OSV response
+          // degrades to UNKNOWN license / empty vulns, never a hang.
+          withTimeout(
+            fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`),
+            EXTERNAL_FETCH_TIMEOUT_MS,
+            `NPM fetch for ${packageName}`
+          ),
+          withTimeout(
+            fetch('https://api.osv.dev/v1/query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                package: { name: packageName, ecosystem: 'npm' },
+                ...(packageVersion ? { version: packageVersion } : {}),
+              }),
+              signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
             }),
-          }),
+            EXTERNAL_FETCH_TIMEOUT_MS + 1_000,
+            `OSV query for ${packageName}`
+          ),
         ]);
 
         let resolvedLicense = 'UNKNOWN';
@@ -171,8 +183,9 @@ Instructions:
 6. Return output strictly matching the JSON schema.
 `;
 
-        const geminiResponse = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+        const geminiResponse = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.5-flash',
           contents: systemPrompt,
           config: {
             responseMimeType: 'application/json',
@@ -197,7 +210,10 @@ Instructions:
               required: ['status', 'reason', 'suggestedAlternatives'],
             },
           },
-        });
+          }),
+          GEMINI_TIMEOUT_MS,
+          'Gemini audit analysis'
+        );
 
         if (geminiResponse.text) {
           parsedVerdict = JSON.parse(geminiResponse.text);
@@ -259,10 +275,27 @@ Instructions:
       });
     }
 
+    // Reject empty audit requests before doing any AI/scan work.
+    if (rawDependencies.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid request payload. "dependencies"/"packages" array must not be empty.' },
+        { status: 400 }
+      );
+    }
+
     // ── 6. Web3 On-Chain Settlement ──────────────────────────────────────────
+    // Non-blocking settlement: the buyer's $0.01 is already locked in escrow, so
+    // settlement only moves funds from escrow to treasury. Do not block the
+    // audit HTTP response on a 10-30s chain confirmation. If auto-settle
+    // fails, funds stay safely in Pending state and can be settled or
+    // refunded later via the admin script.
     let settlementTxHash: string | null = null;
     if (authModel === 'ModelB_Web3' && auditId) {
-      settlementTxHash = await settleEscrowPayment(auditId);
+      settleEscrowPayment(auditId)
+        .then((txHash) => {
+          if (txHash) console.log(`[Audit] Async settlement confirmed for ${auditId}: ${txHash}`);
+        })
+        .catch((err) => console.error(`[Audit] Async settlement failed for ${auditId}:`, err));
     }
 
     // ── 7. Construct Final Response Payload & Save Audit Log ──────────────────

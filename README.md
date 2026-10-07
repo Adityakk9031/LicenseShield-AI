@@ -227,6 +227,33 @@ curl -X POST http://localhost:3000/api/v1/audit \
 
 ---
 
+## 🤖 Agent-to-Agent (A2A) SDK
+
+The [`sdk/`](sdk/index.ts) module is the drop-in client for coding agents (Claude, Cursor, Copilot, CI bots). One call, two payment paths:
+
+- **Model A — SaaS:** pass an `ls_live_*` API key. Server-side quota, no wallet.
+- **Model B — Web3:** pass a funded wallet key. The SDK locks $0.01 USDC on Base Sepolia bound to the exact request body (`keccak256` payload hash), then calls the audit API. Non-replayable by design.
+
+```ts
+import { LicenseShieldClient } from './sdk';
+
+const shield = new LicenseShieldClient({
+  baseUrl: 'https://your-deployment.example.com',
+  apiKey: process.env.LICENSE_SHIELD_KEY, // or signerKey for Web3 escrow
+});
+
+const report = await shield.audit({ packages: ['axios@1.6.0'], targetLicense: 'MIT' });
+if (report.status === 'FLAGGED') {
+  // block install, surface report.suggestedAlternatives
+}
+```
+
+Full guide: [`sdk/LICENSE_SHIELD_SDK.md`](sdk/LICENSE_SHIELD_SDK.md) · runnable example: [`scripts/sdk-example.ts`](scripts/sdk-example.ts).
+
+Ops: pending escrow locks (fire-and-forget settlement misses) can be swept with `npx tsx scripts/settle-pending-escrows.ts check|settle|refund 0x<auditId>`.
+
+---
+
 ## 📜 License
 
 MIT License — see [LICENSE](LICENSE) for details.

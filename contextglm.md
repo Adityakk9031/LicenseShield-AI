@@ -128,4 +128,52 @@ npm run typecheck                # tsc --noEmit
 node --env-file=.env scripts/setup-stripe-prices.mjs    # idempotent Stripe price setup
 node --env-file=.env scripts/test-billing-flow.mjs      # end-to-end billing test (needs dev server up)
 npm run test:hybrid              # escrow/API-key integration checks
+npx tsx scripts/sdk-example.ts   # end-to-end A2A SDK example (needs dev server up)
+node sdk/guard.mjs -- npm install <pkgs>   # live interception guard
+npx tsx scripts/settle-pending-escrows.ts check|settle|refund 0x<auditId>  # escrow ops
 ```
+
+---
+
+## 7. Session 2 — Landing Redesign, Gemini 3.5, A2A SDK & Pipeline Hardening
+
+> Generated: 2026-10-07 | Commits: `1d1da06`, `c4caaa7`, plus this session's SDK/hardening commit. **Nothing pushed** (user: commit only, no push).
+
+### 7.1 Landing premium redesign (commit `1d1da06`, 13 files)
+- Analyzed fastlane.webm vs our landing video frame-by-frame in a temp browser server (port 8777, since killed); identified "AI slop" gaps (neon cyan, gradient text, inconsistent chips).
+- Established design language: indigo `#6366F1` accent, periwinkle `#A5B4FC` highlights, solid white headlines (no gradient text), flat buttons with depth shadows, ink cards (1px border, 20px radius, hover lift), mono only for code, Space Grotesk for prices/stats.
+- Hero type rebalanced to Fastlane proportions: `.hero-heading` clamp(32px,4.1vw,58px) w700 lh1.08 ls-0.042em max-w 1000px, no forced `<br>`; H2 clamp(27px,3.3vw,40px); subtext clamp(14.5px,1.35vw,16.5px) max-w 560px.
+- **3D tilt cards** (Aceternity-style): new `components/ui/3d-card.tsx` (CardContainer/CardBody/CardItem, MouseEnterContext, `Tag as any` cast for TS) + `lib/utils.ts` (cn via clsx + tailwind-merge). Wired into 3 pricing tiers (price 90/title 45/list 25/CTA 50 translateZ), 4 metric cards (value 70), 3 billing cards (80/30/20/40). Verified matrix3d transforms live.
+- **Pricing synced landing ↔ /billing**: Free $0 / Pro $29 / Enterprise $199 with matching feature lists; fee copy corrected $0.001 → $0.01 (contract truth). Pro featured card uses `.pricing-featured` class in globals.css.
+- **RisoDither hero background** (`components/ui/RisoDither.tsx`, new): canvas flow-field + Bayer dithering, all 13 spec knobs as props (palette, bg, bgAlpha, speed, pixelSize, levels, scale, contrast, flowAngle, detail, glow, matrix, style); seeded value-noise fBm; z2 ABOVE scrub canvas(z0)+vignette(z1); scroll dissolve opacity = 1 − min(1, scrollY/(vh*0.85)) handing off to the 240-frame scrubber; SSR-safe. Hero tuning: palette ['#070614','#1E1B4E','#4A3FB8','#7C6FE8','#B7A6F4','#E8A0C8'], bg #050410, speed 0.24, pixelSize 6, levels 6, scale 1.15, contrast 1.9, flowAngle 32, detail 0.3, glow 0.32, matrix 8.
+- De-slopped: OverlayHero (uniform indigo chips), HybridPricing (flat indigo toggle), AgentPlayground (semantic badge colors #FDA4AF/#FCD34D/#6EE7B7), Footer, AuthModal, BrandLogo (indigo shield). **`.dash-layout` scoped dashboard light theme untouched.** `LicenseShieldScrubber` untouched (240 frames, DO NOT MODIFY).
+- Untracked leftovers: `videos/` (fastlane.webm, licenseshield.webm, scrub.html) — deliberately not committed.
+
+### 7.2 Gemini 2.5 → 3.5 Flash (commit `c4caaa7`, 12 files)
+- Verified `gemini-3.5-flash` is a valid GA model ID (ai.google.dev) before swapping.
+- Model string swapped in: `app/api/v1/audit/route.ts`, `app/api/v1/verify/route.ts`, `lib/gemini.ts`, `lib/geminiScanner.ts` (2 sites).
+- UI copy swapped: HybridPricing Pro feature, OverlayMetrics, OverlayDrawer, HeroAudit tag, billing proFeatures, dashboard logs page.
+- Docs: README.md, PROJECT_DETAILS.md. Only contextglm.md §1 historical line keeps "2.5".
+
+### 7.3 Agent pipeline audit (analysis, findings fed into 7.4)
+Architecture confirmed sound: hybrid auth (A: sha256 key→Prisma→quota; B: escrow lock payloadHash-bound) → concurrent NPM+OSV → Gemini w/ responseSchema → rule-engine fallback → settle → AuditLog.
+Strengths: payloadHash binding (non-replayable locks), hashed keys + exact-match env fallback, atomic usage increment, graceful degradation everywhere.
+Issues ranked: (1) guest backdoor on verify, (2) settle waited on-chain confirmation inside HTTP response (10–30s+), (3) empty payload silently audited axios+lodash & burned quota, (4) no concurrency limits (500 deps = 1000 outbound calls), (5) duplicated Gemini engine code (lib/gemini.ts + lib/geminiScanner.ts dead, routes inline their own), (6) `@`-parsing duplicated inconsistently across routes, (7) usage incremented before audit runs (Gemini failure burns quota), (8) pre-existing: stale STRIPE_WEBHOOK_SECRET, lifetime counters.
+
+### 7.4 A2A SDK + guard + pipeline hardening (this session's commit)
+**SDK (`sdk/index.ts`, new)** — `LicenseShieldClient`: `audit()` (auto Model A/B; B path generates auditId, serializes body ONCE so lock hash ≡ sent bytes, USDC approve only if allowance insufficient, lockAuditFee + 1 conf, then POST w/ X-Audit-ID), `verify()` (sandbox), `estimateCost()` (live auditFee from chain), escrow address auto-learned from backend 402 challenge, typed `LicenseShieldError`.
+**Guard (`sdk/guard.mjs`, new)** — live interception wrapper: detect npm/pnpm/yarn/bun install|add|un, call /api/v1/verify, FAIL → block exit 1 w/ per-package reasons + CVE IDs + Gemini alternatives; WARN → print, run; PASS → transparent; non-package commands pass-through in ~0.2s w/ ZERO backend calls; fail-open by default on backend outage (LICENSE_SHIELD_FAIL_CLOSED=1 to fail closed). ESM (uses `import { spawn }` — first draft had a require() crash, fixed).
+**Verify route fixes**: sandbox rate limit 20/IP/hour (`lib/rate-limit.ts`, bounded Map, 429 + Retry-After, slot refund on early 400s), empty payload → 400 (no more silent default packages).
+**Audit route fixes**: empty dependencies → 400; settlement now fire-and-forget (funds stay Pending safely if async settle fails).
+**Timeout hardening (`lib/timeout.ts`, new)** — discovered live: verify endpoint hung 120s+ with zero response when Gemini stalled (reproduced; server itself healthy). Gemini capped at 30s, NPM/OSV at 10s, each in `withTimeout` racing → graceful rule-engine fallback. Re-tested: worst case 33s to verdict, guaranteed.
+**Ops script (`scripts/settle-pending-escrows.ts`, new)**: `check|settle|refund 0x<auditId>` for missed fire-and-forget settlements. **Example (`scripts/sdk-example.ts`, new)**: full A2A loop runnable.
+**Docs**: `sdk/LICENSE_SHIELD_SDK.md` (A2A guide, flow diagram, Model A/B table, config table, Claude Code PreToolUse hook JSON, Cursor/Gemini CLI pre-command pattern), README A2A SDK section.
+**Verified live**: empty verify → 400; unauthenticated audit → 402 w/ real escrow addr `0x27ea5e193bA7D7296AC6baa051f58707f8c367a5`; sandbox axios audit → FAIL 15/100, 31 OSV CVEs, proof hash, 30s; guard blocked `npm install some-gpl-package axios@1.6.0` exit 1 in 34s w/ full report; pass-through 0.2s.
+**The 7-step developer loop (user's flow) now complete**: key gen ✅ (billing.ts) → SDK install ✅ (in-repo; npm publish later) → dev prompt ✅ (n/a) → **live interception ✅ (guard.mjs — was the missing piece)** → micro-payment ✅ ($0.01 payload-bound escrow; user said $0.0001, contract says $0.01) → verdict ✅ → invisible/autonomous ✅.
+
+### 7.5 Session 2 known issues / next steps (delta from §5)
+- **Rate limiter is per-instance in-memory** — swap for Redis/Upstash for multi-region (interface stays).
+- **npm publish of `@licenseshield/sdk`** — package.json for sdk/ + build (it's plain TS + one .mjs; needs its own package.json + tsconfig to publish).
+- **Model B not yet exercised E2E** via SDK (needs funded Base Sepolia wallet; solidity tests / hardhat network pass, HTTP path needs live lock).
+- **Gemini 3.5 quality not A/B'd** vs 2.5 verdicts.
+- Still open from §5: rule-engine HIGH vs Gemini APPROVED disagreement (#5), lifetime counters (#8), pull dead lib code (#7), Stripe webhook secret (#3).

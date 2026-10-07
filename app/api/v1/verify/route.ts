@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { checkSandboxRateLimit, clearSandboxRateLimit, clientIpFromRequest } from '@/lib/rate-limit';
+import { withTimeout, EXTERNAL_FETCH_TIMEOUT_MS, GEMINI_TIMEOUT_MS } from '@/lib/timeout';
 import { GoogleGenAI, Type } from '@google/genai';
 import { checkLicenseCompatibility } from '@/lib/license-engine';
 import { verifyApiKey, verifyEscrowLock, saveAuditLog } from '@/lib/payment';
@@ -44,10 +46,35 @@ export async function POST(req: Request) {
       }
     }
 
-    // If sandbox / public guest execution, allow execution in sandbox mode
+    // Sandbox / public guest execution — rate limited per IP so the free
+    // pipeline cannot be abused for unlimited Gemini spend.
     if (!isAuthorized) {
+      const clientIp = clientIpFromRequest(req);
+      const sandboxCheck = checkSandboxRateLimit(clientIp);
+      if (!sandboxCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: 'Sandbox rate limit exceeded. Use a valid API key (Model A) or a $0.01 USDC escrow lock (Model B) for production audits.',
+            retryAfterSeconds: sandboxCheck.retryAfterSeconds,
+          },
+          { status: 429, headers: { 'Retry-After': String(sandboxCheck.retryAfterSeconds) } }
+        );
+      }
       isAuthorized = true;
       authModel = 'Sandbox_Guest';
+    }
+
+    // Reject empty audit requests instead of silently scanning default packages.
+    const hasExplicitPackages =
+      (Array.isArray(body.packages) && body.packages.length > 0) ||
+      (Array.isArray(body.dependencies) && body.dependencies.length > 0) ||
+      (typeof body.command === 'string' && body.command.trim().length > 0);
+
+    if (!hasExplicitPackages) {
+      return NextResponse.json(
+        { error: 'Invalid request payload. Expected a non-empty "packages"/"dependencies" array or an "npm install …" command.' },
+        { status: 400 }
+      );
     }
 
     const agentId = body.agentId || 'generic-ai-coding-agent';
@@ -66,7 +93,11 @@ export async function POST(req: Request) {
     }
 
     if (rawPackages.length === 0) {
-      rawPackages = ['axios@1.6.0', 'lodash@4.17.20'];
+      clearSandboxRateLimit(req);
+      return NextResponse.json(
+        { error: 'No verifiable packages found in request. Provide packages, dependencies, or an npm install command.' },
+        { status: 400 }
+      );
     }
 
     // ── Concurrently fetch NPM metadata & OSV.dev CVEs ─────────────────────────
@@ -82,15 +113,26 @@ export async function POST(req: Request) {
         }
 
         const [npmRes, osvRes] = await Promise.allSettled([
-          fetch(`https://registry.npmjs.org/${encodeURIComponent(pkgName)}/latest`, { next: { revalidate: 3600 } }),
-          fetch('https://api.osv.dev/v1/query', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              package: { name: pkgName, ecosystem: 'npm' },
-              ...(pkgVersion && pkgVersion !== 'latest' ? { version: pkgVersion } : {}),
+          // Each external call is individually timeout-guarded: a stalled
+          // registry or OSV response degrades to the fallback, never a hang.
+          withTimeout(
+            fetch(`https://registry.npmjs.org/${encodeURIComponent(pkgName)}/latest`, { next: { revalidate: 3600 } }),
+            EXTERNAL_FETCH_TIMEOUT_MS,
+            `NPM fetch for ${pkgName}`
+          ),
+          withTimeout(
+            fetch('https://api.osv.dev/v1/query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                package: { name: pkgName, ecosystem: 'npm' },
+                ...(pkgVersion && pkgVersion !== 'latest' ? { version: pkgVersion } : {}),
+              }),
+              signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
             }),
-          }),
+            EXTERNAL_FETCH_TIMEOUT_MS + 1_000,
+            `OSV query for ${pkgName}`
+          ),
         ]);
 
         let resolvedLicense = 'UNKNOWN';
@@ -183,8 +225,9 @@ Provide a strict JSON response with:
 2. "recommendation": Concrete fix instructions or compatible replacement packages if any issues exist.
 `;
 
-        const geminiRes = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+        const geminiRes = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.5-flash',
           contents: systemPrompt,
           config: {
             responseMimeType: 'application/json',
@@ -197,7 +240,10 @@ Provide a strict JSON response with:
               required: ['explanation', 'recommendation'],
             },
           },
-        });
+          }),
+          GEMINI_TIMEOUT_MS,
+          'Gemini explanation'
+        );
 
         if (geminiRes.text) {
           const parsed = JSON.parse(geminiRes.text);
