@@ -2,6 +2,7 @@
   "name": "license-shield-ai",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev -p 8080",
     "build": "next build",
@@ -19,8 +20,6 @@
     "@prisma/client": "^5.22.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
-    "@supabase/ssr": "^0.12.4",
-    "@supabase/supabase-js": "^2.112.0",
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",

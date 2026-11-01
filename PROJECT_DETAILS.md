@@ -2,6 +2,12 @@
 
 > **Commercial Hybrid AI Security & Compliance Audit Platform**  
 > Serving human engineering teams (**Model A: Web2 SaaS / Stripe**) and autonomous AI agents (**Model B: Web3 Micro-APIs / Base Sepolia Smart Contract Escrow**).
+>
+> 📌 **Update (2026-11-01):** the contract listed here has since been **upgraded with a
+> pre-funded USDC Deposit Vault + EIP-712 signature settlement** (`depositVault`,
+> `withdrawVault`, `settleWithSignature`) and deployed at
+> `0x9D89373E03Eb135d62B9F59F585b03ad44DE8Ef9`. The per-scan escrow functions below
+> remain intact. See `contextargon.md` for the current architecture.
 
 ---
 

@@ -1,5 +1,12 @@
 # LicenseShield AI — Development Context Summary
 > Last Updated: 2026-09-17 | Conversation ID: 6b968d8d-6883-44c6-9130-cde7460c45b1
+>
+> ⚠️ **HISTORICAL DOCUMENT (Session 1 snapshot).** The current source of truth is
+> `contextglm.md` (Sessions 2–3: security hardening, Stripe repair, A2A SDK) and
+> `contextargon.md` (Session 4: 3-Pillar Threat Guard, EIP-712 Deposit Vault,
+> A2A Auto-Correction). Facts below — fees, prices, contract address, port — have
+> been corrected to match current reality; some Supabase-era code described here
+> has since been removed.
 
 ---
 
@@ -15,14 +22,14 @@
 
 ### Dual-Flow System
 1. **Web2 Dashboard (Human Users)** — Powered by **Clerk** auth. Standard SaaS with Stripe billing.
-2. **Web3 M2M Flow (AI Agents/CLI)** — Powered by Bearer API keys. Micro-transactions settled on Base Sepolia ($0.001 USDC per scan).
+2. **Web3 M2M Flow (AI Agents/CLI)** — Powered by Bearer API keys. Micro-transactions settled on Base Sepolia ($0.01 USDC per scan — contract `auditFee()`, the truth across all docs).
 
 ### Tech Stack
 - **Framework**: Next.js 16.2.10 (App Router, Turbopack)
 - **Auth**: Clerk (`@clerk/nextjs`)
 - **Database**: Supabase PostgreSQL (via Prisma)
 - **Payments**: Stripe (Web2 SaaS) + Base Sepolia USDC (Web3)
-- **Smart Contract**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e` on Base Sepolia (84532)
+- **Smart Contract**: ⚠️ `0x036CbD53842c5426634e7929541eC2318f3dCF7e` is the **Base Sepolia USDC token** (not the escrow). The deployed `LicenseShieldEscrow` contract (Escrow + EIP-712 Deposit Vault) is `0x9D89373E03Eb135d62B9F59F585b03ad44DE8Ef9`.
 - **Styling**: Tailwind CSS v4 + custom `globals.css` (Obsidian Glassmorphism design system)
 - **Fonts**: Inter, Space Grotesk, JetBrains Mono (Google Fonts)
 
@@ -79,12 +86,12 @@ CLERK_SECRET_KEY=sk_test_...
 
 ### Web2 (Stripe)
 - Monthly SaaS subscriptions
-- Plans: Free ($0), Pro Team ($49/mo), Enterprise ($299/mo)
+- Plans: Free ($0), Pro ($29/mo), Enterprise ($199/mo)
 - `STRIPE_PRO_PRICE_ID` and `STRIPE_ENTERPRISE_PRICE_ID` in `.env`
 
 ### Web3 (Base Sepolia USDC)
-- Pay-per-scan at $0.001 USDC
-- Escrow Contract: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+- Pay-per-scan at $0.01 USDC
+- Escrow Contract: `0x9D89373E03Eb135d62B9F59F585b03ad44DE8Ef9` (original `0x27ea5e1…c767a5` before the EIP-712 Vault upgrade)
 - Network: Base Sepolia (Chain ID: 84532)
 - `AuthModal` has a `web3` tab showing escrow details
 
@@ -165,7 +172,7 @@ TREASURY_WALLET_ADDRESS=0x42B980cCEFF9E8c50E24D9c9a9A0160B5B2b92B4
 GEMINI_API_KEY=...
 
 # App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:8080
 
 # Web2 API Keys
 LICENSE_SHIELD_API_KEYS=ls_live_demo_key_998877,ls_test_key_123456

@@ -92,7 +92,6 @@ const POPULAR_NPM_PACKAGES = [
   'zustand',
   'redux',
   '@reduxjs/toolkit',
-  'tanstack-query',
   '@tanstack/react-query',
   'swr',
   'cheerio',

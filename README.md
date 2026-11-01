@@ -160,7 +160,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 
 # App Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:8080
 LICENSE_SHIELD_API_KEYS=ls_live_demo_key_998877,ls_test_key_123456
 ```
 
@@ -177,7 +177,7 @@ npx prisma generate
 npm run dev
 ```
 
-Visit `http://localhost:3000` to launch the platform.
+Visit `http://localhost:8080` to launch the platform.
 
 ---
 
@@ -200,7 +200,7 @@ npm run compile
 ### Real-Time Dependency Verification (`POST /api/v1/verify`)
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/verify \
+curl -X POST http://localhost:8080/api/v1/verify \
   -H "Authorization: Bearer ls_live_demo_key_998877" \
   -H "Content-Type: application/json" \
   -d '{
@@ -213,7 +213,7 @@ curl -X POST http://localhost:3000/api/v1/verify \
 ### Full Audit Engine (`POST /api/v1/audit`)
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/audit \
+curl -X POST http://localhost:8080/api/v1/audit \
   -H "Authorization: Bearer ls_live_demo_key_998877" \
   -H "Content-Type: application/json" \
   -d '{
