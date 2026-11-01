@@ -148,3 +148,38 @@ npm run test:hybrid                                # Run all 5 Hybrid Platform &
 node sdk/guard.mjs -- npm install axois@1.6.0      # Test live CLI interception & A2A block
 node sdk/guard.mjs --auto-fix -- npm install axois@1.6.0  # Test live CLI interception with A2A Auto-Pivot
 ```
+
+---
+
+## 7. Session 3 — Real-Agent Validation, Release Hardening & the Demo Lab
+
+> Generated: 2026-11-01 (same day, GLM-model sessions) | Commits: `53f72e4`, `5d8284d`, `c927a53`, + (this) maintenance-mode policy
+
+### 7.1 What was validated with a REAL coding agent (OpenCode v2.1.4)
+- Built the hands-on lab at **`D:\LicenseShieldDemoProject`** (outside the repo): `AGENTS.md` firewall protocol, `shield.cmd` / `shield-auto-fix.cmd` wrappers, vibe-coder + targeted prompt playbook in its README. Global `licenseshield-guard` bin via `npm link`.
+- Demo repo, agent-driven install scenes (all against live backend + npm + OSV + Gemini):
+  - **PASSED** clean install (`zod@latest chalk` — exit 0, installed)
+  - **BLOCKED** `axois@1.6.0` — typosquat + its REAL malware advisories (GHSA-wpfc-3w63-g4hm, MAL-2025-15245), exit 1, never on disk
+  - **AUTO-PIVOT** `--auto-fix` → pivoted `axois`→axios AND `some-gpl-package`→lodash-es, exit 0
+  - **BLOCKED** `request@2.88.2` — OSV cross-checked: 2.88.2 genuinely affected by GHSA-p8p7-x288-28g6 SSRF (abandoned package)
+  - **Model B2 live**: on-chain `auditFee()` read (0.01 USDC) → vault balance → `<1ms` EIP-712 voucher sign → server verified → `authModel: ModelB_EIP712_Vault` verdict; unfunded vault settlement failed gracefully (async, "transfer amount exceeds allowance" logged, audit still 200)
+- **OpenCode agent compliance**: with zero hard enforcement, the agent read AGENTS.md and wrapped all installs in `.\shield.cmd` — never ran a bare `npm install`.
+
+### 7.2 Release-blocker bugs found & fixed by this real-agent pass
+1. **`c927a53` — OSV false-positive wall**: versionless/latest packages queried OSV without a version → OSV returned the package's ENTIRE historical CVE list → current patched releases (zod@4.6.7) hard-blocked. Fix: both routes now fetch NPM first, resolve the effective version, then query OSV for exactly that version.
+2. **`5d8284d` — SDK packaging bug**: `ethers` as `peerDependencies` was NOT auto-installed from npm tarballs → every import crashed. Moved to `dependencies`. Also wrapped network errors as typed `LicenseShieldError` (was raw `TypeError: fetch failed`).
+3. **Maintenance-mode policy (this commit)**: `moment` was APPROVED 100/100 (factually correct — it is NOT registry-deprecated, no CVEs). Added `MAINTENANCE_MODE_MAP` (moment→dayjs) in threat-guard: curated maintenance-mode packages flag **MEDIUM → WARN path**. Verified scoring model: hard risks (typosquat/hallucination/copyleft/CVE) stay ~15; soft-only flags floor at 60 → WARN (75/100 for lone moment), install proceeds, agent acquires the info without a bricked workflow. `conflictDetail` now carries the maintenance message text.
+4. Registry endpoint audit: `/latest` DOES carry `deprecated` (request/node-sass/tslint/left-pad verified) — no packument fetch needed.
+
+### 7.3 Production cleanup (commit `53f72e4`)
+- Dead-code sweep: `lib/supabase*.ts`×3, `lib/gemini.ts|geminiScanner.ts|npm-fetcher.ts|osv-client.ts`, `app/(auth)/*`, `app/api/auth/*`, `app/reports`, `app/vault`, `stitch_ui.html`, legacy test script; `@supabase` deps dropped.
+- Docs reconciled: CONTEXT_SUMMARY (fee $0.01, prices $29/$199, USDC-vs-escrow mislabel, port 8080, historical banner), PROJECT_DETAILS EIP-712 note, README port.
+- Security hygiene: `.env.example` had an apparent REAL private key → placeholder (file untracked; never committed to GitHub). Root MIT LICENSE added. GitHub Actions CI (typecheck + SDK build + solc compile; integration job gated). `.gitignore`: `sdk/dist`, `sdk/*.tgz`, `videos/`.
+- New ops tool: `scripts/check-gemini.mjs` (lists models available to the key + calls flash candidates; key never printed).
+
+### 7.4 Gemini model surface (probed live)
+Key's model list includes 2.5/3/3.1/3.5/3.6/3.7/3.8 flash + variants. Production stays `gemini-3.5-flash` (fast ~2s, clean `responseSchema` output, proven across all demos). 3.6-flash: fast (2.4s) but plain-prompt output garbled — needs structured A/B before swap. 3.8-flash: valid ID but 59–76s latency under "high demand" 503s → blows the 30s `GEMINI_TIMEOUT_MS` budget; rule-engine fallback would dominate. Make the model ID env-configurable if a swap is wanted later.
+
+### 7.5 Release state & remaining manual gates
+- Typecheck 0 errors; all 5 hybrid suites green; SDK tarball consumer-acceptance + live agent loop green. SDK bumped to **1.1.0** (ethers dep + typed network errors).
+- Manual: `npm login` → `cd sdk && npm run build && npm publish --access public`; fund a Base Sepolia wallet for the full Model B2 settlement receipt; Stripe webhook secret for the new account.

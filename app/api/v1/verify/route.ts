@@ -272,7 +272,10 @@ export async function POST(req: Request) {
         } else if (isDeprecated) {
           riskType = 'DEPRECATED_PACKAGE';
           itemStatus = 'FLAGGED';
-          conflictDetail = inspection.deprecatedMessage;
+          conflictDetail =
+            inspection.deprecatedMessage ||
+            inspection.threatRisks.find((r) => r.type === 'DEPRECATED')?.detail ||
+            'Legacy/bloat warning';
         } else if (licenseConflict) {
           riskType = 'UNKNOWN_LICENSE';
           itemStatus = 'FLAGGED';
@@ -317,8 +320,20 @@ export async function POST(req: Request) {
 
     let score = 100;
     if (flaggedItems.length > 0) {
-      const deductionPerFlag = Math.round(90 / totalItems);
-      score = Math.max(15, 100 - flaggedItems.length * deductionPerFlag);
+      const hardCount = flaggedItems.filter((p) =>
+        ['TYPOSQUATTING_RISK', 'HALLUCINATED_PACKAGE', 'COPYLEFT_VIOLATION', 'CRITICAL_CVE'].includes(p.riskType)
+      ).length;
+      const softCount = flaggedItems.length - hardCount;
+
+      if (hardCount > 0) {
+        // Critical security/compliance risks stay close to the floor.
+        score = Math.max(15, 100 - hardCount * Math.round(90 / totalItems) - softCount * 25);
+      } else {
+        // Soft signals only (maintenance-mode, unknown license metadata):
+        // warn loudly, don't brick the workflow.
+        score = Math.max(60, 100 - softCount * 25);
+      }
+
       if (hasHardBlockRisk && score >= 50) {
         score = 25; // Guarantee hard block (< 50) when any critical security/compliance risk exists
       }

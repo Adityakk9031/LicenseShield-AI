@@ -117,6 +117,17 @@ const POPULAR_NPM_PACKAGES = [
 ];
 
 /**
+ * Long-term maintenance-mode ("zombie") packages. These are NOT npm-registry
+ * deprecated (their deprecation lives in runtime warnings / EOL announcements),
+ * so the registry flag check cannot catch them. We flag them soft (MEDIUM → WARN)
+ * so agents are informed and pointed at the modern replacement, but the install
+ * still proceeds — hard-blocking mainstream legacy packages would be too blunt.
+ */
+export const MAINTENANCE_MODE_MAP: Record<string, string> = {
+  moment: 'dayjs',
+};
+
+/**
  * Known deprecated/vulnerable/legacy packages mapped to modern, safe drop-in replacements.
  */
 export const SAFE_REPLACEMENT_MAP: Record<string, string> = {
@@ -336,6 +347,19 @@ export function evaluatePackageMetadata(
       detail: `Deprecated & unmaintained library: "${deprecatedMessage}"`,
       suggestedReplacement: replacement,
     });
+  } else {
+    // Registry-clean but in long-term maintenance mode (e.g. moment → dayjs):
+    // soft MEDIUM signal so agents get informed without a hard install block.
+    const maintenanceReplacement = MAINTENANCE_MODE_MAP[pkgName.toLowerCase()];
+    if (maintenanceReplacement) {
+      threatRisks.push({
+        package: pkgName,
+        type: 'DEPRECATED',
+        severity: 'MEDIUM',
+        detail: `Package is in long-term maintenance mode (no new features, security-fix only). Consider migrating to "${maintenanceReplacement}".`,
+        suggestedReplacement: maintenanceReplacement,
+      });
+    }
   }
 
   // Resolve license & version
