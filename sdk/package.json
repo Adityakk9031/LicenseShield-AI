@@ -38,7 +38,7 @@
     "gemini"
   ],
   "license": "MIT",
-  "peerDependencies": {
+  "dependencies": {
     "ethers": "^6.0.0"
   }
 }

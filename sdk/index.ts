@@ -489,14 +489,22 @@ export class LicenseShieldClient {
   ): Promise<unknown> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let res: Response;
     try {
-      const res = await fetch(`${this.baseUrl}${path}`, {
+      res = await fetch(`${this.baseUrl}${path}`, {
         method,
         headers,
         body: method === 'POST' ? body : undefined,
         signal: controller.signal,
       });
-
+    } catch (err: any) {
+      throw new LicenseShieldError(
+        `Network error calling ${this.baseUrl}${path}: ${err?.message || err}`,
+        undefined,
+        { cause: err?.name === 'AbortError' ? 'timeout' : 'network' }
+      );
+    }
+    try {
       const text = await res.text();
       let json: unknown;
       try {
