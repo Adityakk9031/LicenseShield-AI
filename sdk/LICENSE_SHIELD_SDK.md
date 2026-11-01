@@ -198,7 +198,7 @@ node sdk/guard.mjs -- npm install axios@1.6.0 left-pad
 
 | Variable | Meaning |
 |----------|---------|
-| `LICENSE_SHIELD_URL` | Backend base URL (default `http://localhost:3001`) |
+| `LICENSE_SHIELD_URL` | Backend base URL (default `http://localhost:8080`) |
 | `LICENSE_SHIELD_KEY` | `ls_live_*` API key (Model A — recommended for agents) |
 | `LICENSE_SHIELD_POLICY` | Target license policy (default `MIT`) |
 | `LICENSE_SHIELD_FAIL_CLOSED` | `1` = block commands when the backend is unreachable (default: fail-open with a warning) |

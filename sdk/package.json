@@ -1,0 +1,44 @@
+{
+  "name": "@licenseshield/sdk",
+  "version": "1.0.0",
+  "description": "Agent-Native Security, License Compliance & Anti-Hallucination Firewall SDK for AI Coding Agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js",
+      "import": "./index.ts"
+    },
+    "./guard": "./guard.mjs"
+  },
+  "bin": {
+    "licenseshield-guard": "./guard.mjs"
+  },
+  "files": [
+    "dist",
+    "index.ts",
+    "guard.mjs",
+    "LICENSE_SHIELD_SDK.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "licenseshield",
+    "ai-agents",
+    "security-firewall",
+    "license-compliance",
+    "slopsquatting",
+    "typosquatting",
+    "eip-712",
+    "base-sepolia",
+    "gemini"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "ethers": "^6.0.0"
+  }
+}

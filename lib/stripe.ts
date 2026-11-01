@@ -19,7 +19,7 @@ export async function createDemoCheckoutSession(
   priceId: string,
   tier: 'PRO' | 'ENTERPRISE' = 'PRO'
 ): Promise<string> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080';
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',

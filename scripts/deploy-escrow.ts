@@ -84,6 +84,11 @@ async function deploy() {
   console.log('Compiling LicenseShieldEscrow.sol...');
   const { abi, bytecode } = compileContract();
 
+  if (process.argv.includes('--compile-only')) {
+    console.log(`✅ Compilation succeeded! ABI methods: ${abi.length}, Bytecode size: ${bytecode.length / 2} bytes`);
+    return;
+  }
+
   const factory = new ethers.ContractFactory(abi, bytecode, wallet);
   console.log('Sending deployment transaction to Base Sepolia...');
 

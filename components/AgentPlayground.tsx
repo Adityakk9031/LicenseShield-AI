@@ -38,6 +38,17 @@ const SCENARIOS: AgentScenario[] = [
     tagType: 'warning',
   },
   {
+    id: 'hallucination',
+    name: 'AI Hallucination & Typosquatting',
+    agent: 'Windsurf / Cline',
+    description: 'Agent hallucinates a non-existent package (slopsquatting risk), typosquats axios ("axois"), and pulls deprecated "request".',
+    command: 'npm install axois@1.6.0 react-ai-dom-hallucinated@1.0.0 request@2.88.2',
+    packages: ['axois@1.6.0', 'react-ai-dom-hallucinated@1.0.0', 'request@2.88.2'],
+    targetPolicy: 'MIT',
+    tag: '🛡️ MALWARE GUARD',
+    tagType: 'danger',
+  },
+  {
     id: 'clean',
     name: 'Permissive Enterprise Stack',
     agent: 'Gemini CLI',
@@ -429,6 +440,49 @@ export default function AgentPlayground() {
               {verificationResult.recommendation && (
                 <div style={{ fontSize: 11.5, fontFamily: 'var(--font-mono)', color: '#A5B4FC', background: 'rgba(99, 102, 241, 0.07)', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(129, 140, 248, 0.2)' }}>
                   💡 Fix: {verificationResult.recommendation}
+                </div>
+              )}
+
+              {verificationResult.autoCorrection?.remediationCommand && verificationResult.status !== 'PASS' && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    flexWrap: 'wrap',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    background: 'rgba(16, 185, 129, 0.08)',
+                    border: '1px solid rgba(52, 211, 153, 0.3)',
+                  }}
+                >
+                  <div style={{ fontSize: 11.5, fontFamily: 'var(--font-mono)', color: '#6EE7B7' }}>
+                    🤖 A2A Auto-Correction: <strong>{verificationResult.autoCorrection.remediationCommand}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomCommand(verificationResult.autoCorrection.remediationCommand);
+                      setTerminalLogs((prev) => [
+                        ...prev,
+                        `[${new Date().toLocaleTimeString()}] ⚡ [A2A AUTO-PIVOT] Agent replaced blocked command with: ${verificationResult.autoCorrection.remediationCommand}`,
+                      ]);
+                    }}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      background: 'rgba(52, 211, 153, 0.2)',
+                      border: '1px solid rgba(52, 211, 153, 0.45)',
+                      color: '#A7F3D0',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Apply Auto-Fix →
+                  </button>
                 </div>
               )}
             </div>

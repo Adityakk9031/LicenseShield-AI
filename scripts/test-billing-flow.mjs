@@ -4,7 +4,7 @@
 // 3. Verify the Profile tier + provisioned API key in the database
 import crypto from 'node:crypto';
 
-const BASE = 'http://localhost:3001';
+const BASE = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080';
 const WHSEC = process.env.STRIPE_WEBHOOK_SECRET;
 
 async function main() {

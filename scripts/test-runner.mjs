@@ -1,6 +1,6 @@
 
 
-const API_URL = 'http://localhost:3000/api/audit';
+const API_URL = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:8080') + '/api/audit';
 
 async function runTests() {
   console.log('Running LicenseShield AI tests...\n');

@@ -4,18 +4,36 @@ import { checkSandboxRateLimit, clearSandboxRateLimit, clientIpFromRequest } fro
 import { withTimeout, EXTERNAL_FETCH_TIMEOUT_MS, GEMINI_TIMEOUT_MS } from '@/lib/timeout';
 import { GoogleGenAI, Type } from '@google/genai';
 import { checkLicenseCompatibility } from '@/lib/license-engine';
-import { verifyApiKey, verifyEscrowLock, saveAuditLog } from '@/lib/payment';
+import {
+  evaluatePackageMetadata,
+  parsePackageSpecString,
+  buildAutoCorrectionPlan,
+  SAFE_REPLACEMENT_MAP,
+} from '@/lib/threat-guard';
+import {
+  verifyApiKey,
+  verifyEscrowLock,
+  verifyEip712Voucher,
+  settleEip712Voucher,
+  saveAuditLog,
+  Eip712AuditVoucher,
+} from '@/lib/payment';
+
+const MAX_PACKAGES_PER_VERIFY = 60;
 
 export async function POST(req: Request) {
   const startTime = Date.now();
 
   try {
     const authHeader = req.headers.get('Authorization') || '';
-    const auditIdHeader = req.headers.get('X-Audit-ID') || req.headers.get('X-Payment-Signature') || '';
+    const auditIdHeader = req.headers.get('X-Audit-ID') || '';
+    const signatureHeader = req.headers.get('X-Payment-Signature') || '';
+    const voucherHeader = req.headers.get('X-Payment-Voucher') || '';
 
     let isAuthorized = false;
-    let authModel: 'ModelA_SaaS' | 'ModelB_Web3' | 'Sandbox_Guest' = 'Sandbox_Guest';
+    let authModel: 'ModelA_SaaS' | 'ModelB_Web3' | 'ModelB_EIP712_Vault' | 'Sandbox_Guest' = 'Sandbox_Guest';
     let authenticatedUserId: string | undefined = undefined;
+    let verifiedVoucher: Eip712AuditVoucher | undefined = undefined;
 
     // Check Model A (Bearer API Key)
     if (authHeader) {
@@ -27,7 +45,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Read the raw body once: JSON for parsing, exact bytes for escrow payload binding
+    // Read the raw body once: JSON for parsing, exact bytes for escrow / EIP-712 payload binding
     const rawBody = await req.text();
     let body: any = {};
     try {
@@ -35,10 +53,28 @@ export async function POST(req: Request) {
     } catch {
       body = {};
     }
-    const auditId = auditIdHeader || body.auditId || `vfy_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const auditId =
+      auditIdHeader ||
+      body.auditId ||
+      `vfy_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-    // Check Model B (Web3 Escrow Lock)
-    if (!isAuthorized && auditIdHeader) {
+    // Check Model B2 (Web3 Deposit Vault + EIP-712 Cryptographic Signature)
+    if (!isAuthorized && signatureHeader && (voucherHeader || body.voucher)) {
+      const voucherCheck = verifyEip712Voucher(
+        signatureHeader,
+        voucherHeader || body.voucher,
+        rawBody
+      );
+      if (voucherCheck.valid && voucherCheck.voucher) {
+        isAuthorized = true;
+        authModel = 'ModelB_EIP712_Vault';
+        verifiedVoucher = voucherCheck.voucher;
+      }
+    }
+
+    // Check Model B1 (Web3 Escrow Lock)
+    const lockCandidateId = auditIdHeader || signatureHeader;
+    if (!isAuthorized && lockCandidateId) {
       const isLocked = await verifyEscrowLock(auditId, rawBody);
       if (isLocked) {
         isAuthorized = true;
@@ -54,7 +90,8 @@ export async function POST(req: Request) {
       if (!sandboxCheck.allowed) {
         return NextResponse.json(
           {
-            error: 'Sandbox rate limit exceeded. Use a valid API key (Model A) or a $0.01 USDC escrow lock (Model B) for production audits.',
+            error:
+              'Sandbox rate limit exceeded. Use a valid API key (Model A), an EIP-712 Deposit Vault signature, or a $0.01 USDC escrow lock (Model B) for production audits.',
             retryAfterSeconds: sandboxCheck.retryAfterSeconds,
           },
           { status: 429, headers: { 'Retry-After': String(sandboxCheck.retryAfterSeconds) } }
@@ -71,8 +108,12 @@ export async function POST(req: Request) {
       (typeof body.command === 'string' && body.command.trim().length > 0);
 
     if (!hasExplicitPackages) {
+      clearSandboxRateLimit(req);
       return NextResponse.json(
-        { error: 'Invalid request payload. Expected a non-empty "packages"/"dependencies" array or an "npm install …" command.' },
+        {
+          error:
+            'Invalid request payload. Expected a non-empty "packages"/"dependencies" array or an "npm install …" command.',
+        },
         { status: 400 }
       );
     }
@@ -81,42 +122,52 @@ export async function POST(req: Request) {
     const repository = body.repository || 'workspace/ai-generated-project';
     const targetPolicy = body.targetPolicy || body.targetLicense || 'MIT';
 
-    // Parse requested packages
+    // Parse requested packages from array or CLI command string
     let rawPackages: string[] = [];
     if (Array.isArray(body.packages)) {
-      rawPackages = body.packages.map((p: any) => (typeof p === 'string' ? p : p.name ? `${p.name}@${p.version || 'latest'}` : String(p)));
+      rawPackages = body.packages.map((p: any) =>
+        typeof p === 'string' ? p : p.name ? `${p.name}@${p.version || 'latest'}` : String(p)
+      );
     } else if (Array.isArray(body.dependencies)) {
       rawPackages = body.dependencies;
-    } else if (typeof body.command === 'string' && body.command.includes('npm install')) {
-      const parts = body.command.replace('npm install', '').replace('npm i', '').trim().split(/\s+/);
-      rawPackages = parts.filter((p: string) => p && !p.startsWith('-'));
+    } else if (typeof body.command === 'string') {
+      const tokens = body.command
+        .trim()
+        .split(/\s+/)
+        .filter(
+          (tok: string) =>
+            tok &&
+            !tok.startsWith('-') &&
+            !/^(npm|pnpm|yarn|bun|install|i|add|un|uninstall|remove)$/.test(tok)
+        );
+      rawPackages = tokens;
     }
 
     if (rawPackages.length === 0) {
       clearSandboxRateLimit(req);
       return NextResponse.json(
-        { error: 'No verifiable packages found in request. Provide packages, dependencies, or an npm install command.' },
+        {
+          error:
+            'No verifiable packages found in request. Provide packages, dependencies, or an npm install command.',
+        },
         { status: 400 }
       );
     }
 
-    // ── Concurrently fetch NPM metadata & OSV.dev CVEs ─────────────────────────
-    const packageEvaluations = await Promise.all(
-      rawPackages.map(async (pkgStr) => {
-        let pkgName = pkgStr;
-        let pkgVersion: string | undefined = undefined;
+    const boundedPackages = rawPackages.slice(0, MAX_PACKAGES_PER_VERIFY);
 
-        const atIdx = pkgStr.lastIndexOf('@');
-        if (atIdx > 0) {
-          pkgName = pkgStr.slice(0, atIdx);
-          pkgVersion = pkgStr.slice(atIdx + 1);
-        }
+    // ── Concurrently evaluate 3 Threat Pillars: License + Hallucination/Typosquat + OSV CVE ──
+    const packageEvaluations = await Promise.all(
+      boundedPackages.map(async (pkgStr) => {
+        const parsedSpec = parsePackageSpecString(pkgStr);
+        const pkgName = parsedSpec.name;
+        const pkgVersion = parsedSpec.version;
 
         const [npmRes, osvRes] = await Promise.allSettled([
-          // Each external call is individually timeout-guarded: a stalled
-          // registry or OSV response degrades to the fallback, never a hang.
           withTimeout(
-            fetch(`https://registry.npmjs.org/${encodeURIComponent(pkgName)}/latest`, { next: { revalidate: 3600 } }),
+            fetch(`https://registry.npmjs.org/${encodeURIComponent(pkgName)}/latest`, {
+              next: { revalidate: 3600 },
+            }),
             EXTERNAL_FETCH_TIMEOUT_MS,
             `NPM fetch for ${pkgName}`
           ),
@@ -135,16 +186,17 @@ export async function POST(req: Request) {
           ),
         ]);
 
-        let resolvedLicense = 'UNKNOWN';
-        let resolvedVersion = pkgVersion || 'latest';
+        let npmStatus: number | null = null;
+        let npmData: any | null = null;
 
-        if (npmRes.status === 'fulfilled' && npmRes.value.ok) {
-          try {
-            const npmData = await npmRes.value.json();
-            resolvedLicense = npmData.license || 'UNKNOWN';
-            if (!pkgVersion || pkgVersion === 'latest') resolvedVersion = npmData.version || 'latest';
-          } catch {
-            // fallback
+        if (npmRes.status === 'fulfilled') {
+          npmStatus = npmRes.value.status;
+          if (npmRes.value.ok) {
+            try {
+              npmData = await npmRes.value.json();
+            } catch {
+              // fallback
+            }
           }
         }
 
@@ -158,26 +210,73 @@ export async function POST(req: Request) {
           }
         }
 
-        const licenseConflict = checkLicenseCompatibility(pkgName, resolvedLicense, targetPolicy);
+        const inspection = evaluatePackageMetadata(pkgName, pkgVersion, npmStatus, npmData);
+        const resolvedLicense = inspection.resolvedLicense;
+        const resolvedVersion = inspection.resolvedVersion;
 
-        let riskType: 'NONE' | 'COPYLEFT_VIOLATION' | 'CRITICAL_CVE' | 'UNKNOWN_LICENSE' = 'NONE';
+        const isHallucinated = inspection.threatRisks.some((r) => r.type === 'HALLUCINATION');
+        const isTyposquat = inspection.threatRisks.some((r) => r.type === 'TYPOSQUATTING');
+        const isDeprecated = inspection.threatRisks.some((r) => r.type === 'DEPRECATED');
+
+        const licenseConflict = !isHallucinated
+          ? checkLicenseCompatibility(pkgName, resolvedLicense, targetPolicy)
+          : null;
+
+        let riskType:
+          | 'NONE'
+          | 'TYPOSQUATTING_RISK'
+          | 'HALLUCINATED_PACKAGE'
+          | 'COPYLEFT_VIOLATION'
+          | 'CRITICAL_CVE'
+          | 'DEPRECATED_PACKAGE'
+          | 'UNKNOWN_LICENSE' = 'NONE';
         let itemStatus: 'APPROVED' | 'FLAGGED' = 'APPROVED';
+        let conflictDetail: string | null = null;
+        let suggestedReplacement: string | null =
+          inspection.typosquat.targetPackage || SAFE_REPLACEMENT_MAP[pkgName.toLowerCase()] || null;
 
-        if (licenseConflict) {
+        if (isTyposquat) {
+          riskType = 'TYPOSQUATTING_RISK';
+          itemStatus = 'FLAGGED';
+          conflictDetail =
+            inspection.threatRisks.find((r) => r.type === 'TYPOSQUATTING')?.detail ||
+            'Typosquatting attack detected';
+        } else if (isHallucinated) {
+          riskType = 'HALLUCINATED_PACKAGE';
+          itemStatus = 'FLAGGED';
+          conflictDetail =
+            inspection.threatRisks.find((r) => r.type === 'HALLUCINATION')?.detail ||
+            'Package does not exist on NPM registry (AI hallucination)';
+        } else if (licenseConflict && licenseConflict.severity === 'HIGH') {
           riskType = 'COPYLEFT_VIOLATION';
           itemStatus = 'FLAGGED';
+          conflictDetail = licenseConflict.detail;
         } else if (vulnerabilities.length > 0) {
           riskType = 'CRITICAL_CVE';
           itemStatus = 'FLAGGED';
+          conflictDetail = `${vulnerabilities.length} known OSV security advisories`;
+          if (!suggestedReplacement) suggestedReplacement = `${pkgName}@latest`;
+        } else if (isDeprecated) {
+          riskType = 'DEPRECATED_PACKAGE';
+          itemStatus = 'FLAGGED';
+          conflictDetail = inspection.deprecatedMessage;
+        } else if (licenseConflict) {
+          riskType = 'UNKNOWN_LICENSE';
+          itemStatus = 'FLAGGED';
+          conflictDetail = licenseConflict.detail;
         } else if (resolvedLicense === 'UNKNOWN') {
           riskType = 'UNKNOWN_LICENSE';
           itemStatus = 'FLAGGED';
+          conflictDetail = 'License metadata could not be verified';
         }
 
         return {
           package: pkgName,
           version: resolvedVersion,
           license: resolvedLicense,
+          existsOnRegistry: inspection.existsOnRegistry,
+          deprecated: inspection.deprecatedMessage,
+          suggestedReplacement,
           status: itemStatus,
           riskType,
           vulnerabilitiesCount: vulnerabilities.length,
@@ -185,7 +284,7 @@ export async function POST(req: Request) {
             id: v.id,
             summary: v.summary || v.details || 'Known vulnerability in package',
           })),
-          conflictDetail: licenseConflict ? licenseConflict.detail : null,
+          conflictDetail,
         };
       })
     );
@@ -194,18 +293,36 @@ export async function POST(req: Request) {
     const flaggedItems = packageEvaluations.filter((p) => p.status === 'FLAGGED');
     const totalItems = packageEvaluations.length;
 
+    const hasHardBlockRisk = flaggedItems.some((p) =>
+      [
+        'TYPOSQUATTING_RISK',
+        'HALLUCINATED_PACKAGE',
+        'COPYLEFT_VIOLATION',
+        'CRITICAL_CVE',
+      ].includes(p.riskType)
+    );
+
     let score = 100;
     if (flaggedItems.length > 0) {
       const deductionPerFlag = Math.round(90 / totalItems);
       score = Math.max(15, 100 - flaggedItems.length * deductionPerFlag);
+      if (hasHardBlockRisk && score >= 50) {
+        score = 25; // Guarantee hard block (< 50) when any critical security/compliance risk exists
+      }
     }
 
     let overallStatus: 'PASS' | 'WARN' | 'FAIL' = 'PASS';
-    if (score < 50) {
+    if (score < 50 || hasHardBlockRisk) {
       overallStatus = 'FAIL';
-    } else if (score < 90) {
+    } else if (score < 90 || flaggedItems.length > 0) {
       overallStatus = 'WARN';
     }
+
+    // Build A2A Auto-Correction Plan
+    const autoCorrection = buildAutoCorrectionPlan(
+      packageEvaluations,
+      typeof body.command === 'string' ? body.command : undefined
+    );
 
     // ── AI Explanation with Gemini 3.5 Flash ────────────────────────────────────
     let aiExplanation = '';
@@ -216,30 +333,37 @@ export async function POST(req: Request) {
       try {
         const ai = new GoogleGenAI({ apiKey: geminiKey });
         const systemPrompt = `
-You are the LicenseShield AI autonomous verification agent protecting repositories from unauthorized AI code generation dependencies.
-Evaluate this dependency verification payload from AI Agent "${agentId}" against target policy "${targetPolicy}":
+You are the LicenseShield AI autonomous runtime firewall protecting coding agents from:
+1. Legal Traps (viral copyleft licenses like AGPL-3.0, GPL-3.0, SSPL-1.0)
+2. AI Hallucinations & Typosquatting (fake 404 packages & typosquats of popular packages)
+3. Vulnerabilities & Bloat (OSV CVEs and deprecated libraries)
+
+Evaluate this verification payload from AI Agent "${agentId}" against target policy "${targetPolicy}":
 ${JSON.stringify(packageEvaluations, null, 2)}
 
+Auto-Correction Plan:
+${JSON.stringify(autoCorrection, null, 2)}
+
 Provide a strict JSON response with:
-1. "explanation": 2 clear sentences explaining the verification verdict and security/license impact.
-2. "recommendation": Concrete fix instructions or compatible replacement packages if any issues exist.
+1. "explanation": 2 clear sentences explaining the exact threats or compliance verdict found.
+2. "recommendation": Concrete A2A remediation instructions (including exact replacement package names or the remediation command if applicable).
 `;
 
         const geminiRes = await withTimeout(
           ai.models.generateContent({
             model: 'gemini-3.5-flash',
-          contents: systemPrompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                explanation: { type: Type.STRING },
-                recommendation: { type: Type.STRING },
+            contents: systemPrompt,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  explanation: { type: Type.STRING },
+                  recommendation: { type: Type.STRING },
+                },
+                required: ['explanation', 'recommendation'],
               },
-              required: ['explanation', 'recommendation'],
             },
-          },
           }),
           GEMINI_TIMEOUT_MS,
           'Gemini explanation'
@@ -257,15 +381,31 @@ Provide a strict JSON response with:
 
     if (!aiExplanation) {
       if (overallStatus === 'FAIL') {
-        aiExplanation = `Intercepted ${flaggedItems.length} incompatible or vulnerable packages violating the ${targetPolicy} policy. Execution blocked to prevent license infection.`;
-        aiRecommendation = `Replace flagged dependencies (${flaggedItems.map((f) => f.package).join(', ')}) with permissive alternatives like lodash-es or clean modular libraries.`;
+        const riskSummaries = flaggedItems.map(
+          (f) => `${f.package} (${f.riskType.replace(/_/g, ' ')})`
+        );
+        aiExplanation = `Intercepted ${flaggedItems.length} dangerous or non-compliant package(s): ${riskSummaries.join(', ')}. Execution blocked before installation.`;
+        aiRecommendation =
+          autoCorrection.remediationCommand
+            ? `Auto-Correct immediately by running: ${autoCorrection.remediationCommand}`
+            : `Remove flagged dependencies (${flaggedItems.map((f) => f.package).join(', ')}) and replace with permissive, verified alternatives.`;
       } else if (overallStatus === 'WARN') {
-        aiExplanation = `Dependencies contain minor warnings or unknown license definitions under ${targetPolicy} policy.`;
-        aiRecommendation = `Review package licenses manually or specify strict pinned versions.`;
+        aiExplanation = `Dependencies contain deprecation warnings or unverified license metadata under ${targetPolicy} policy.`;
+        aiRecommendation =
+          autoCorrection.remediationCommand
+            ? `Consider modernizing with: ${autoCorrection.remediationCommand}`
+            : `Review package metadata manually or pin verified versions.`;
       } else {
-        aiExplanation = `All ${totalItems} packages verified compliant with ${targetPolicy} policy and clear of active OSV advisories.`;
-        aiRecommendation = `Safe to proceed with agent code execution.`;
+        aiExplanation = `All ${totalItems} packages verified authentic on NPM, compliant with ${targetPolicy} policy, and clear of active OSV advisories.`;
+        aiRecommendation = `Safe to proceed with agent execution.`;
       }
+    }
+
+    // Settle EIP-712 voucher asynchronously if used on verify
+    if (authModel === 'ModelB_EIP712_Vault' && verifiedVoucher && signatureHeader) {
+      settleEip712Voucher(verifiedVoucher, signatureHeader).catch((err) =>
+        console.warn('[Verify] Async EIP-712 settlement warning:', err)
+      );
     }
 
     // ── Generate Cryptographic Execution Proof ────────────────────────────────
@@ -287,6 +427,7 @@ Provide a strict JSON response with:
       latencyMs,
       authModel,
       details: packageEvaluations,
+      autoCorrection,
       explanation: aiExplanation,
       recommendation: aiRecommendation,
       verifiedAt: new Date().toISOString(),
@@ -296,17 +437,20 @@ Provide a strict JSON response with:
     await saveAuditLog({
       auditId,
       userId: authenticatedUserId || null,
-      billedVia: authModel === 'ModelB_Web3' ? 'BASE_SEPOLIA_USDC' : 'STRIPE_SUBSCRIPTION',
+      billedVia:
+        authModel === 'ModelB_Web3' || authModel === 'ModelB_EIP712_Vault'
+          ? 'BASE_SEPOLIA_USDC'
+          : 'STRIPE_SUBSCRIPTION',
       targetLicense: targetPolicy,
       packagesScanned: packageEvaluations,
       reportOutput: responsePayload,
     });
 
     return NextResponse.json(responsePayload);
-  } catch (error: any) {
-    console.error('Agent verify API handler error:', error);
+  } catch (error) {
+    console.error('[API /v1/verify] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal verification error' },
+      { error: 'Internal verification engine failure' },
       { status: 500 }
     );
   }

@@ -5,7 +5,7 @@
  *
  * Path A (SaaS key):  set LICENSE_SHIELD_KEY=ls_live_... in .env
  * Path B (escrow):    set AGENT_WALLET_PRIVATE_KEY=0x... (funded with USDC + gas)
- * Set LICENSE_SHIELD_URL if not running against http://localhost:3001
+ * Set LICENSE_SHIELD_URL if not running against http://localhost:8080
  */
 import * as dotenv from 'dotenv';
 import { LicenseShieldClient } from '../sdk';
@@ -13,7 +13,7 @@ import { LicenseShieldClient } from '../sdk';
 dotenv.config();
 
 async function main() {
-  const baseUrl = process.env.LICENSE_SHIELD_URL || 'http://localhost:3001';
+  const baseUrl = process.env.LICENSE_SHIELD_URL || 'http://localhost:8080';
 
   const shield = new LicenseShieldClient(
     process.env.LICENSE_SHIELD_KEY
