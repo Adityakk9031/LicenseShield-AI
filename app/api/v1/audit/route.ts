@@ -147,47 +147,60 @@ export async function POST(req: Request) {
         const packageName = parsedSpec.name;
         const packageVersion = parsedSpec.version;
 
-        const [npmRes, osvRes] = await Promise.allSettled([
-          withTimeout(
-            fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`),
-            EXTERNAL_FETCH_TIMEOUT_MS,
-            `NPM fetch for ${packageName}`
-          ),
-          withTimeout(
-            fetch('https://api.osv.dev/v1/query', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                package: { name: packageName, ecosystem: 'npm' },
-                ...(packageVersion && packageVersion !== 'latest'
-                  ? { version: packageVersion }
-                  : {}),
-              }),
-              signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
-            }),
-            EXTERNAL_FETCH_TIMEOUT_MS + 1_000,
-            `OSV query for ${packageName}`
-          ),
-        ]);
+        const npmResPromise = withTimeout(
+          fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`),
+          EXTERNAL_FETCH_TIMEOUT_MS,
+          `NPM fetch for ${packageName}`
+        );
+
+        const npmSettled = await npmResPromise.then(
+          (v) => ({ ok: true, res: v }),
+          () => ({ ok: false, res: null })
+        );
 
         let npmStatus: number | null = null;
         let npmData: any | null = null;
 
-        if (npmRes.status === 'fulfilled') {
-          npmStatus = npmRes.value.status;
-          if (npmRes.value.ok) {
+        if (npmSettled.ok && npmSettled.res) {
+          npmStatus = npmSettled.res.status;
+          if (npmSettled.res.ok) {
             try {
-              npmData = await npmRes.value.json();
+              npmData = await npmSettled.res.json();
             } catch (e) {
               console.error(`Error parsing NPM response for ${packageName}:`, e);
             }
           }
         }
 
+        // Query OSV for the exact version being audited — an unversioned OSV query
+        // returns the package's entire historical vulnerability list and
+        // false-blocks already-patched releases when the agent pinned 'latest'.
+        const effectiveVersion =
+          packageVersion && packageVersion !== 'latest'
+            ? packageVersion
+            : npmData?.version;
+
+        const osvSettled = await withTimeout(
+          fetch('https://api.osv.dev/v1/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              package: { name: packageName, ecosystem: 'npm' },
+              ...(effectiveVersion ? { version: effectiveVersion } : {}),
+            }),
+            signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
+          }),
+          EXTERNAL_FETCH_TIMEOUT_MS + 1_000,
+          `OSV query for ${packageName}`
+        ).then(
+          (v) => ({ ok: true, res: v }),
+          () => ({ ok: false, res: null })
+        );
+
         let vulnerabilities: any[] = [];
-        if (osvRes.status === 'fulfilled' && osvRes.value.ok) {
+        if (osvSettled.ok && osvSettled.res && osvSettled.res.ok) {
           try {
-            const osvData = await osvRes.value.json();
+            const osvData = await osvSettled.res.json();
             vulnerabilities = osvData.vulns || [];
           } catch (e) {
             console.error(`Error parsing OSV response for ${packageName}:`, e);
